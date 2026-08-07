@@ -11,16 +11,17 @@
 
   /* ---------- Unicorn Studio init ---------- */
   function initUnicornStudio() {
-    var el = document.querySelector('[data-us-project]');
-    if (!el) return;
-    var projectId = el.getAttribute('data-us-project');
+    if (typeof UnicornStudio === 'undefined' || !UnicornStudio.init) return;
 
-    if (!projectId || projectId === 'TODO_UNICORN_PROJECT_ID') {
-      el.style.display = 'none';
-      return;
-    }
+    var embeds = document.querySelectorAll('[data-us-project]');
+    var hasReal = false;
 
-    if (typeof UnicornStudio !== 'undefined' && UnicornStudio.init) {
+    embeds.forEach(function (el) {
+      var id = el.getAttribute('data-us-project');
+      if (id && id !== 'TODO_UNICORN_PROJECT_ID') hasReal = true;
+    });
+
+    if (hasReal) {
       UnicornStudio.init();
       var fallback = document.querySelector('.hero-fallback');
       if (fallback) fallback.style.display = 'none';
@@ -32,42 +33,39 @@
     var canvas = document.getElementById('hero-canvas');
     if (!canvas) return;
 
-    var el = document.querySelector('[data-us-project]');
-    var projectId = el ? el.getAttribute('data-us-project') : '';
+    var heroBg = document.querySelector('.hero-bg');
+    var projectId = heroBg ? heroBg.getAttribute('data-us-project') : '';
     if (projectId && projectId !== 'TODO_UNICORN_PROJECT_ID') return;
 
     var ctx = canvas.getContext('2d');
-    var width, height;
-    var time = 0;
-    var animId;
+    var width, height, time = 0, animId;
 
     function resize() {
       width = canvas.width = canvas.offsetWidth;
       height = canvas.height = canvas.offsetHeight;
     }
 
-    function drawTopoLines() {
+    function draw() {
       ctx.clearRect(0, 0, width, height);
-
       ctx.fillStyle = '#2F0E00';
       ctx.fillRect(0, 0, width, height);
 
-      var lineCount = 18;
-      var spacing = height / lineCount;
+      var lines = 20;
+      var spacing = height / lines;
 
-      for (var i = 0; i < lineCount; i++) {
+      for (var i = 0; i < lines; i++) {
         ctx.beginPath();
         var baseY = i * spacing;
         ctx.moveTo(0, baseY);
 
         for (var x = 0; x <= width; x += 4) {
-          var wave1 = Math.sin((x * 0.003) + time + (i * 0.6)) * spacing * 0.35;
-          var wave2 = Math.sin((x * 0.007) - time * 0.7 + (i * 0.3)) * spacing * 0.15;
-          var wave3 = Math.cos((x * 0.002) + time * 0.4 + (i * 0.9)) * spacing * 0.2;
-          ctx.lineTo(x, baseY + wave1 + wave2 + wave3);
+          var w1 = Math.sin((x * 0.003) + time + (i * 0.6)) * spacing * 0.35;
+          var w2 = Math.sin((x * 0.007) - time * 0.7 + (i * 0.3)) * spacing * 0.15;
+          var w3 = Math.cos((x * 0.002) + time * 0.4 + (i * 0.9)) * spacing * 0.2;
+          ctx.lineTo(x, baseY + w1 + w2 + w3);
         }
 
-        var alpha = 0.04 + (Math.sin(time * 0.5 + i * 0.4) * 0.02);
+        var alpha = 0.035 + (Math.sin(time * 0.5 + i * 0.4) * 0.015);
         ctx.strokeStyle = 'rgba(147, 15, 18, ' + alpha + ')';
         ctx.lineWidth = 1;
         ctx.stroke();
@@ -75,12 +73,9 @@
     }
 
     function animate() {
-      if (prefersReduced) {
-        drawTopoLines();
-        return;
-      }
-      time += 0.008;
-      drawTopoLines();
+      if (prefersReduced) { draw(); return; }
+      time += 0.006;
+      draw();
       animId = requestAnimationFrame(animate);
     }
 
@@ -88,14 +83,14 @@
     window.addEventListener('resize', resize);
     animate();
 
-    var observer = new IntersectionObserver(function (entries) {
+    var obs = new IntersectionObserver(function (entries) {
       if (entries[0].isIntersecting) {
         if (!animId && !prefersReduced) animate();
       } else {
         if (animId) { cancelAnimationFrame(animId); animId = null; }
       }
     }, { threshold: 0 });
-    observer.observe(canvas);
+    obs.observe(canvas);
   }
 
   /* ---------- Nav scroll state ---------- */
@@ -105,11 +100,11 @@
     if (!nav || !hero) return;
 
     var navH = nav.getBoundingClientRect().height;
-    var observer = new IntersectionObserver(function (entries) {
+    var obs = new IntersectionObserver(function (entries) {
       nav.classList.toggle('is-scrolled', !entries[0].isIntersecting);
     }, { threshold: 0, rootMargin: '-' + navH + 'px 0px 0px 0px' });
 
-    observer.observe(hero);
+    obs.observe(hero);
   }
 
   /* ---------- Mobile nav toggle ---------- */
@@ -136,19 +131,19 @@
 
   /* ---------- Scroll reveal ---------- */
   function initReveal() {
-    var reveals = document.querySelectorAll('.reveal');
-    if (!reveals.length) return;
+    var items = document.querySelectorAll('.reveal-line');
+    if (!items.length) return;
 
-    var observer = new IntersectionObserver(function (entries) {
+    var obs = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
         if (entry.isIntersecting) {
           entry.target.classList.add('is-visible');
-          observer.unobserve(entry.target);
+          obs.unobserve(entry.target);
         }
       });
-    }, { threshold: 0.15, rootMargin: '0px 0px -60px 0px' });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
 
-    reveals.forEach(function (el) { observer.observe(el); });
+    items.forEach(function (el) { obs.observe(el); });
   }
 
   /* ---------- Hero parallax / tilt on cursor ---------- */
@@ -158,7 +153,7 @@
     var wordmark = document.querySelector('.hero-wordmark');
     if (!wordmark) return;
 
-    var hero = document.querySelector('.hero');
+    var hero = document.getElementById('hero');
     var ticking = false;
 
     hero.addEventListener('mousemove', function (e) {
@@ -169,10 +164,7 @@
         var rect = hero.getBoundingClientRect();
         var x = (e.clientX - rect.left) / rect.width - 0.5;
         var y = (e.clientY - rect.top) / rect.height - 0.5;
-
-        wordmark.style.transform =
-          'translate(' + (x * 12) + 'px, ' + (y * 8) + 'px)';
-
+        wordmark.style.transform = 'translate(' + (x * 10) + 'px, ' + (y * 6) + 'px)';
         ticking = false;
       });
     });
