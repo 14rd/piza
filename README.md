@@ -1,22 +1,47 @@
-# PIZA — piza.global
+# PIZA — Representation 2.0
 
-Static single-page marketing site for PIZA Global.
+Single-page site for PIZA Global. Next.js (App Router, TypeScript), statically
+exported and served from GitHub Pages at **https://piza.studiosubtract.com**.
 
-## Local preview
+## Develop
 
-Open `index.html` directly in a browser — no server or build step needed.
+```bash
+npm install
+npm run dev
+```
 
-## Deploy to GitHub Pages
+Then open http://localhost:3000.
 
-1. Push this folder's contents to a GitHub repo (or as a subfolder).
-2. Go to **Settings → Pages**.
-3. Set source to the branch/folder containing `index.html`.
-4. The `.nojekyll` file tells GitHub Pages to skip Jekyll processing.
+## Build
 
-## Customization
+```bash
+npm run build
+```
 
-- **Unicorn Studio hero**: Replace `TODO_UNICORN_PROJECT_ID` in `index.html` with your project ID from unicorn.studio's Export → Embed dialog.
-- **Logo**: Search for `<!-- LOGO SLOT -->` comments to swap in the real SVG wordmark.
-- **Contact email / Instagram**: Replace `TODO_CONTACT_EMAIL` and `TODO_INSTAGRAM_URL` placeholders.
-- **Inflated 3D logo**: Search for `<!-- INFLATED LOGO SLOT -->` in the contact section.
-- **Fonts**: Space Grotesk (OFL license) is self-hosted in `/fonts`.
+Writes a fully static site to `out/`. There is no server runtime.
+
+## Deploy
+
+Push to `master`. The `Deploy to GitHub Pages` Action builds and publishes
+`out/` automatically. Nothing to run by hand.
+
+> Pages must be set to **Settings → Pages → Source: GitHub Actions** (not
+> "Deploy from a branch"). `public/CNAME` holds the custom domain and
+> `public/.nojekyll` stops Jekyll from stripping Next's `_next/` directory —
+> both are copied into `out/` at build.
+
+## Layout
+
+| Path | What |
+|------|------|
+| `app/page.tsx` | composes the seven scenes |
+| `app/layout.tsx` | metadata, fonts |
+| `app/globals.css` | all styling and design tokens |
+| `components/CloudShader.tsx` | WebGL cloud background |
+| `components/ScrollStage.tsx` | scroll engine and scene crossfade |
+| `components/CharReveal.tsx` | character-level text reveal |
+| `components/scenes/` | one file per scene |
+| `lib/content.ts` | all copy and roster/press data |
+| `public/assets/` | logotype SVG, inflated logomark |
+
+See `HANDOFF.md` for architecture, brand rules, and open items.

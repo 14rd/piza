@@ -1,0 +1,471 @@
+/* PIZA — Representation 2.0
+   Values transcribed from the design prototype. Colours, spacing and easing
+   are final per the handoff; change with care. */
+
+:root {
+  --bg: #0b0402;
+  --text: #e5e5e5;
+  --crimson: #930F12;
+  --mahogany: #2F0E00;
+  --ease: cubic-bezier(.16, 1, .3, 1);
+  --display: var(--font-space-grotesk), 'Space Grotesk', sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body { overflow-x: clip; }
+
+html {
+  background: var(--bg);
+  scroll-snap-type: y proximity;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Satoshi', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--text); text-decoration: none; }
+a:hover { color: var(--crimson); }
+
+::selection { background: var(--crimson); color: var(--text); }
+
+input, textarea, button { font: inherit; color: inherit; }
+
+:focus-visible {
+  outline: 1px solid var(--text);
+  outline-offset: 3px;
+}
+
+.pz-root {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  background: var(--bg);
+  overflow-x: clip;
+}
+
+/* ---------- character reveal ---------- */
+
+.pz-ch {
+  display: inline-block;
+  opacity: 0;
+  transform: translate3d(0, .3em, 0);
+  filter: blur(7px);
+  transition: opacity .85s ease, transform 1s var(--ease), filter .85s ease;
+}
+.pz-on .pz-ch { opacity: 1; transform: none; filter: blur(0); }
+
+/* ---------- fixed background ---------- */
+
+.pz-bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+.pz-shader { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.pz-vignette {
+  position: absolute; inset: 0;
+  background: radial-gradient(135% 105% at 50% 8%, rgba(11,4,2,0) 55%, rgba(11,4,2,.62) 100%);
+}
+.pz-grain {
+  position: absolute; inset: 0;
+  opacity: .4;
+  mix-blend-mode: overlay;
+  background-repeat: repeat;
+  background-size: 160px 160px;
+}
+
+/* ---------- progress bar ---------- */
+
+.pz-progress {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: 2px; z-index: 60;
+  background: rgba(229,229,229,.1);
+}
+.pz-progress-fill { height: 100%; width: 0%; background: var(--crimson); }
+
+/* ---------- header ---------- */
+
+.pz-header {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 55;
+  display: flex; flex-direction: column; align-items: center;
+  gap: 12px;
+  padding: 18px clamp(20px,4vw,56px) 12px;
+}
+.pz-logo-link { display: flex; align-items: center; color: var(--text); }
+.pz-logo { height: 18px; width: auto; display: block; fill: currentColor; }
+
+.pz-nav {
+  display: flex; align-items: center; justify-content: center;
+  /* wrap between items on narrow screens, never inside a label */
+  flex-wrap: wrap;
+  gap: clamp(16px,2.2vw,30px);
+  font-size: 10px; letter-spacing: .22em; text-transform: uppercase;
+}
+.pz-nav a { color: rgba(229,229,229,.72); white-space: nowrap; }
+.pz-nav a:hover { color: var(--crimson); }
+.pz-nav-cta {
+  color: var(--text);
+  border-bottom: 1px solid rgba(229,229,229,.4);
+  padding-bottom: 2px;
+}
+.pz-nav a.pz-nav-cta { color: var(--text); }
+.pz-nav a.pz-nav-cta:hover { color: var(--crimson); border-bottom-color: var(--crimson); }
+
+/* ---------- scroll spacers ---------- */
+
+.pz-spacers { position: relative; z-index: 1; pointer-events: none; }
+.pz-spacer { height: 100svh; scroll-snap-align: start; }
+
+/* ---------- fixed stage ---------- */
+
+.pz-stage { position: fixed; inset: 0; z-index: 10; }
+.pz-scrim {
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(11,4,2,.18), rgba(11,4,2,.4));
+  pointer-events: none;
+}
+
+.pz-scene {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  text-align: center;
+  padding: 120px clamp(20px,4vw,56px) 70px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  will-change: opacity, transform;
+}
+/* hero is on stage before the scroll engine's first frame */
+.pz-scene--initial { opacity: 1; visibility: visible; pointer-events: auto; }
+.pz-scene--contact {
+  flex-direction: column;
+  padding: 110px clamp(20px,4vw,56px) 50px;
+}
+
+.pz-col { display: flex; flex-direction: column; align-items: center; text-align: center; }
+
+/* ---------- 1. hero ---------- */
+
+.pz-hero-title {
+  margin: 0;
+  max-width: 16ch;
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: clamp(44px,7vw,116px);
+  line-height: 1.02;
+  letter-spacing: -.045em;
+  color: var(--text);
+  text-wrap: balance;
+}
+.pz-dim-58 { color: rgba(229,229,229,.58); }
+
+/* ---------- 2. why piza ---------- */
+
+.pz-quote {
+  margin: 0 auto;
+  max-width: 24ch;
+  font-family: var(--display);
+  font-weight: 300;
+  font-size: clamp(28px,4.6vw,78px);
+  line-height: 1.08;
+  letter-spacing: -.04em;
+  color: var(--text);
+  text-wrap: balance;
+}
+.pz-dim-45 { color: rgba(229,229,229,.45); }
+
+/* ---------- 3. about ---------- */
+
+.pz-about { gap: clamp(20px,3vh,34px); max-width: 1020px; width: 100%; }
+
+.pz-h2 {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: clamp(30px,4vw,64px);
+  line-height: 1.04;
+  letter-spacing: -.036em;
+  color: var(--text);
+}
+
+.pz-about-lede {
+  margin: 0;
+  max-width: 56ch;
+  font-size: clamp(15px,1.1vw,18px);
+  line-height: 1.62;
+  color: rgba(229,229,229,.74);
+  text-wrap: pretty;
+}
+
+.pz-3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  gap: clamp(20px,3vw,52px);
+  width: 100%;
+  max-width: 900px;
+  margin-top: clamp(8px,1.6vh,18px);
+}
+.pz-3-item {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 10px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(229,229,229,.22);
+}
+.pz-3-title {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: clamp(16px,1.3vw,20px);
+  line-height: 1.15;
+  letter-spacing: -.02em;
+  color: var(--text);
+}
+.pz-3-body {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: rgba(229,229,229,.68);
+  text-wrap: pretty;
+}
+
+.pz-pills { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.pz-pill {
+  padding: 8px 15px;
+  border: 1px solid rgba(229,229,229,.22);
+  border-radius: 999px;
+  font-size: 10px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: rgba(229,229,229,.85);
+}
+
+/* ---------- 4. roster ---------- */
+
+.pz-roster-wrap { gap: clamp(22px,3.4vh,40px); max-width: 1160px; width: 100%; }
+.pz-roster-lede {
+  margin: 0;
+  max-width: 58ch;
+  font-size: clamp(15px,1.15vw,19px);
+  line-height: 1.6;
+  color: rgba(229,229,229,.78);
+  text-wrap: pretty;
+}
+.pz-roster {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: rgba(229,229,229,.14);
+  width: 100%;
+}
+.pz-roster-tile {
+  background: rgba(11,4,2,.55);
+  min-height: clamp(110px,16vh,190px);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 8px;
+  padding: clamp(18px,2vw,28px);
+  transition: background .6s var(--ease);
+}
+.pz-roster-tile:hover { background: rgba(147,15,18,.24); }
+.pz-roster-name {
+  font-family: var(--display);
+  font-size: clamp(18px,1.6vw,25px);
+  line-height: 1.1;
+  letter-spacing: -.02em;
+  color: var(--text);
+}
+.pz-roster-disc {
+  font-size: 10px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: rgba(229,229,229,.62);
+}
+
+/* ---------- 5. founder ---------- */
+
+.pz-founder { gap: clamp(16px,2.4vh,26px); max-width: 860px; width: 100%; }
+.pz-portrait {
+  position: relative;
+  width: clamp(110px,20vh,180px);
+  aspect-ratio: 4/5;
+  overflow: hidden;
+  border: 1px solid rgba(229,229,229,.18);
+  display: flex; align-items: center; justify-content: center;
+}
+.pz-portrait-fill {
+  position: absolute; inset: 0;
+  background: linear-gradient(165deg, rgba(147,15,18,.24), rgba(47,14,0,.55));
+}
+.pz-portrait-label {
+  position: relative;
+  padding: 10px;
+  font-size: 9px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: rgba(229,229,229,.75);
+  line-height: 1.9;
+}
+.pz-founder-name { font-size: clamp(30px,3.8vw,60px); line-height: 1.02; letter-spacing: -.038em; }
+.pz-bio {
+  margin: 0;
+  max-width: 66ch;
+  font-size: clamp(14px,1.05vw,17px);
+  line-height: 1.6;
+  color: rgba(229,229,229,.76);
+  text-wrap: pretty;
+}
+.pz-track {
+  display: flex; justify-content: center;
+  gap: clamp(28px,4vw,64px);
+  margin-top: clamp(6px,1.4vh,14px);
+}
+.pz-track-item { display: flex; flex-direction: column; align-items: center; gap: 7px; }
+.pz-track-k {
+  font-family: var(--display);
+  font-size: clamp(18px,1.7vw,28px);
+  letter-spacing: -.03em;
+  color: var(--text);
+}
+.pz-track-v {
+  font-size: 10px;
+  line-height: 1.4;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: rgba(229,229,229,.5);
+  max-width: 20ch;
+}
+
+/* ---------- 6. press / notes ---------- */
+
+.pz-notes { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 880px; }
+.pz-note {
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center;
+  gap: 10px;
+  width: 100%;
+  padding: clamp(20px,3vh,34px) 0;
+  border-bottom: 1px solid rgba(229,229,229,.12);
+  color: var(--text);
+  transition: background .5s var(--ease);
+}
+/* hover tints the row; the type stays alabaster */
+.pz-note:hover { background: rgba(147,15,18,.1); color: var(--text); }
+.pz-note-source {
+  font-size: 10px;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+  color: rgba(229,229,229,.6);
+}
+.pz-note-title {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: clamp(18px,2vw,30px);
+  line-height: 1.15;
+  letter-spacing: -.028em;
+  max-width: 30ch;
+  text-wrap: balance;
+}
+
+/* ---------- 7. contact ---------- */
+
+.pz-contact { gap: clamp(14px,2.2vh,24px); width: 100%; max-width: 760px; }
+.pz-contact-h2 { font-size: clamp(30px,4.2vw,66px); line-height: 1; letter-spacing: -.045em; }
+.pz-inflated { width: clamp(84px,8vw,116px); padding: clamp(10px,1vw,14px); background: #ffffff; }
+.pz-inflated img { width: 100%; height: auto; display: block; }
+
+.pz-contact-links { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.pz-email {
+  font-family: var(--display);
+  font-size: clamp(18px,1.9vw,28px);
+  letter-spacing: -.03em;
+  color: var(--text);
+  transition: color .4s;
+}
+.pz-email:hover { color: var(--crimson); }
+.pz-ig {
+  font-size: 11px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: rgba(229,229,229,.65);
+}
+.pz-ig:hover { color: var(--text); }
+
+.pz-form {
+  display: flex; flex-direction: column;
+  gap: 13px;
+  width: 100%; max-width: 480px;
+  text-align: left;
+  padding: clamp(16px,1.8vw,26px);
+  background: rgba(11,4,2,.55);
+  border: 1px solid rgba(229,229,229,.16);
+  backdrop-filter: blur(10px);
+}
+.pz-label { display: flex; flex-direction: column; gap: 6px; }
+.pz-label-text {
+  font-size: 10px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: rgba(229,229,229,.55);
+}
+.pz-input, .pz-textarea {
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid rgba(229,229,229,.28);
+  padding: 7px 0;
+  font-size: 15px;
+  outline: none;
+  transition: border-color .4s;
+}
+.pz-textarea { resize: vertical; }
+.pz-input:focus, .pz-textarea:focus { border-color: var(--text); }
+
+.pz-submit {
+  align-self: center;
+  margin-top: 4px;
+  padding: 12px 28px;
+  border: 1px solid rgba(229,229,229,.35);
+  border-radius: 999px;
+  background: transparent;
+  font-size: 10px;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background .45s var(--ease), border-color .4s, color .4s;
+}
+.pz-submit:hover { background: var(--text); border-color: var(--text); color: var(--mahogany); }
+
+.pz-footer {
+  font-size: 10px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: rgba(229,229,229,.45);
+}
+
+/* ---------- responsive ---------- */
+
+@media (max-width: 960px) {
+  .pz-3 { grid-template-columns: 1fr; }
+  .pz-roster { grid-template-columns: 1fr 1fr; }
+  .pz-hide-sm { display: none; }
+}
+
+@media (max-width: 560px) {
+  .pz-roster { grid-template-columns: 1fr; }
+}
+
+/* ---------- reduced motion ---------- */
+/* Scene crossfade is the navigation mechanism and stays. The per-character
+   stagger and the shader's motion are what get dialled back. */
+
+@media (prefers-reduced-motion: reduce) {
+  .pz-ch {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    transition: none;
+    transition-delay: 0s !important;
+  }
+  .pz-grain { display: none; }
+  .pz-roster-tile, .pz-note, .pz-submit, .pz-email { transition-duration: .01ms; }
+}

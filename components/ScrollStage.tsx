@@ -1,0 +1,137 @@
+'use client';
+
+import { useEffect, useRef, type ReactNode } from 'react';
+
+/**
+ * The scroll engine.
+ *
+ * Scrolling never moves content down the page. Seven `100svh` spacers create
+ * the scroll length; this component reads scroll position and crossfades the
+ * seven absolutely-positioned scenes in place over the fixed background.
+ *
+ * Styles are mutated directly on the DOM nodes each frame — deliberately no
+ * React state here, so scrolling causes zero re-renders.
+ */
+export default function ScrollStage({ children }: { children: ReactNode }) {
+  const stageRef = useRef<HTMLDivElement>(null);
+  const progressRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage) return;
+
+    const sections = Array.from(
+      stage.querySelectorAll<HTMLElement>('section[data-screen-label]')
+    );
+    if (!sections.length) return;
+
+    let fit: number[] = sections.map(() => 1);
+    const revealed: boolean[] = sections.map(() => false);
+
+    /**
+     * Scenes taller than the viewport shrink so nothing clips. offsetHeight
+     * ignores the scale transform, so measuring stays stable across frames.
+     */
+    const measure = () => {
+      const vh = Math.max(1, window.innerHeight);
+      fit = sections.map((s, i) => {
+        if (i === 0) return 1; // hero is intrinsically fluid
+        let ch = 0;
+        Array.from(s.children).forEach((c) => {
+          ch += (c as HTMLElement).offsetHeight;
+        });
+        const total = ch + 170; // section vertical padding + header clearance
+        return total > vh ? Math.max(0.4, (vh - 96) / total) : 1;
+      });
+    };
+
+    const onScroll = () => {
+      const doc = document.documentElement;
+      const yy = window.scrollY || doc.scrollTop || 0;
+
+      const max = doc.scrollHeight - window.innerHeight;
+      const p = max > 0 ? Math.min(1, yy / max) : 0;
+      if (progressRef.current) {
+        progressRef.current.style.width = `${(p * 100).toFixed(2)}%`;
+      }
+
+      const vh = Math.max(1, window.innerHeight);
+      const pos = yy / vh;
+
+      sections.forEach((s, i) => {
+        const d = pos - i;
+        const a = Math.max(0, 1 - Math.abs(d) * 1.6);
+        const o = a * a * (3 - 2 * a); // smoothstep
+        const k = fit[i] ?? 1;
+
+        s.style.opacity = o.toFixed(3);
+        s.style.visibility = o < 0.01 ? 'hidden' : 'visible';
+        s.style.pointerEvents = o > 0.45 ? 'auto' : 'none';
+        s.style.transform =
+          `translate3d(0,${(-d * 42 + (1 - k) * 60).toFixed(1)}px,0) scale(${k.toFixed(3)})`;
+
+        // character reveals replay each time a scene takes the stage
+        if (o > 0.55 && !revealed[i]) {
+          revealed[i] = true;
+          s.classList.add('pz-on');
+        } else if (o < 0.06 && revealed[i]) {
+          revealed[i] = false;
+          s.classList.remove('pz-on');
+        }
+      });
+    };
+
+    const onResize = () => {
+      measure();
+      onScroll();
+    };
+
+    measure();
+    onScroll();
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onResize);
+
+    // re-measure once fonts and images have settled
+    const t1 = window.setTimeout(onResize, 700);
+    const t2 = window.setTimeout(onResize, 2200);
+    document.fonts?.ready.then(onResize).catch(() => {});
+
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onResize);
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, []);
+
+  // in-page anchors smooth-scroll to their spacer
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      const a = target?.closest?.('a[href^="#"]') as HTMLAnchorElement | null;
+      if (!a) return;
+      const id = a.getAttribute('href')?.slice(1);
+      const el = id ? document.getElementById(id) : null;
+      if (!el) return;
+      e.preventDefault();
+      const y = el.getBoundingClientRect().top + (window.scrollY || 0);
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    };
+
+    document.addEventListener('click', onClick);
+    return () => document.removeEventListener('click', onClick);
+  }, []);
+
+  return (
+    <>
+      <div className="pz-progress" aria-hidden="true">
+        <div ref={progressRef} className="pz-progress-fill" />
+      </div>
+      <div ref={stageRef} className="pz-stage">
+        <div className="pz-scrim" />
+        {children}
+      </div>
+    </>
+  );
+}
