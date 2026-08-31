@@ -102,15 +102,34 @@ input, textarea, button { font: inherit; color: inherit; }
   gap: clamp(16px,2.2vw,30px);
   font-size: 10px; letter-spacing: .22em; text-transform: uppercase;
 }
-.pz-nav a { color: rgba(229,229,229,.72); white-space: nowrap; }
-.pz-nav a:hover { color: var(--crimson); }
-.pz-nav-cta {
-  color: var(--text);
-  border-bottom: 1px solid rgba(229,229,229,.4);
+.pz-nav a {
+  color: rgba(229,229,229,.72);
+  white-space: nowrap;
+  /* underline space is reserved on every link, so marking one active
+     never reflows the nav row */
   padding-bottom: 2px;
+  border-bottom: 1px solid transparent;
+  transition: color .35s var(--ease), border-color .35s var(--ease);
 }
-.pz-nav a.pz-nav-cta { color: var(--text); }
-.pz-nav a.pz-nav-cta:hover { color: var(--crimson); border-bottom-color: var(--crimson); }
+
+/* the CTA carries a standing underline */
+.pz-nav a.pz-nav-cta {
+  color: var(--text);
+  border-bottom-color: rgba(229,229,229,.4);
+}
+
+/* scene currently on stage */
+.pz-nav a.is-active {
+  color: var(--text);
+  border-bottom-color: var(--crimson);
+}
+
+.pz-nav a:hover { color: var(--crimson); }
+.pz-nav a.pz-nav-cta:hover,
+.pz-nav a.is-active:hover {
+  color: var(--crimson);
+  border-bottom-color: var(--crimson);
+}
 
 /* ---------- scroll spacers ---------- */
 

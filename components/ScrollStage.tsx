@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, type ReactNode } from 'react';
+import { SECTION_IDS } from '@/lib/content';
 
 /**
  * The scroll engine.
@@ -27,6 +28,32 @@ export default function ScrollStage({ children }: { children: ReactNode }) {
 
     let fit: number[] = sections.map(() => 1);
     const revealed: boolean[] = sections.map(() => false);
+
+    /**
+     * Scene index -> its nav link. The hero's anchor is the logo rather than a
+     * nav item, so index 0 has no entry and nothing is marked active on it.
+     */
+    const navLinks = new Map<number, HTMLElement>();
+    SECTION_IDS.forEach((id, i) => {
+      const link = document.querySelector<HTMLElement>(`.pz-nav a[href="#${id}"]`);
+      if (link) navLinks.set(i, link);
+    });
+    let activeIndex = -1;
+
+    const setActive = (i: number) => {
+      if (i === activeIndex) return; // only touch the DOM when it changes
+      const prev = navLinks.get(activeIndex);
+      if (prev) {
+        prev.classList.remove('is-active');
+        prev.removeAttribute('aria-current');
+      }
+      const next = navLinks.get(i);
+      if (next) {
+        next.classList.add('is-active');
+        next.setAttribute('aria-current', 'true');
+      }
+      activeIndex = i;
+    };
 
     /**
      * Scenes taller than the viewport shrink so nothing clips. offsetHeight
@@ -57,6 +84,9 @@ export default function ScrollStage({ children }: { children: ReactNode }) {
 
       const vh = Math.max(1, window.innerHeight);
       const pos = yy / vh;
+
+      // the nearest scene is also the most opaque one
+      setActive(Math.min(sections.length - 1, Math.max(0, Math.round(pos))));
 
       sections.forEach((s, i) => {
         const d = pos - i;
