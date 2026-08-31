@@ -14,7 +14,14 @@ const VERT = 'attribute vec2 p; void main(){ gl_Position = vec4(p,0.,1.); }';
  * dropping from 6 to 4 is roughly a third off the per-pixel cost — the
  * difference is fine detail in the cloud, which is barely visible on a phone.
  */
-const buildFrag = (octaves: number) => `
+const buildFrag = (octaves: number, coarse: boolean) => {
+  // touch devices get finer, smaller strands
+  const veinA = coarse ? '13.0' : '11.0';
+  const veinB = coarse ? '18.0' : '16.0';
+  const veinC = coarse ? '26.0' : '22.0';
+  const boltTight = coarse ? '13.0' : '8.5';
+
+  return `
 precision highp float;
 uniform vec2 u_res; uniform float u_t; uniform vec2 u_m; uniform float u_flow; uniform float u_energy; uniform float u_stir;
 uniform float u_glow;   // cursor bloom, rises with pointer speed
@@ -51,27 +58,35 @@ void main(){
   // ---- light: cursor bloom + lightning ----
   // Ridged noise (1 - |2n-1|) peaks along thin lines rather than filling an
   // area. Raised to a high power those ridges narrow into filaments, so the
-  // light reads as veins threading through the cloud instead of a soft ball.
-  // Both source fields are already computed above, so this costs no extra fbm.
-  float veinA = 1.0 - abs(swirl * 2.0 - 1.0);
-  veinA = pow(clamp(veinA, 0.0, 1.0), 11.0);
-  float veinB = 1.0 - abs(patch * 2.0 - 1.0);
-  veinB = pow(clamp(veinB, 0.0, 1.0), 16.0);
-  // two overlapping systems read as branching rather than one clean stripe
-  float filament = veinA + veinB * 0.7;
+  // light reads as strands threading the cloud instead of a soft ball.
+  // All three source fields are already computed above: no extra fbm.
+  float vA = 1.0 - abs(swirl * 2.0 - 1.0);
+  vA = pow(clamp(vA, 0.0, 1.0), ${veinA});
+  float vB = 1.0 - abs(patch * 2.0 - 1.0);
+  vB = pow(clamp(vB, 0.0, 1.0), ${veinB});
+  // a third, much finer system breaks the strands into scattered bits
+  float vC = 1.0 - abs(f * 2.0 - 1.0);
+  vC = pow(clamp(vC, 0.0, 1.0), ${veinC});
+  float filament = vA + vB * 0.7 + vC * 0.5;
 
   float aspect = u_res.x / u_res.y;
 
-  // wide, soft masks: the filaments carry the shape, the mask only says where
+  /**
+   * The falloff distance is warped by the noise field before it is squared,
+   * so the lit area has a ragged, organic edge. A plain radial gaussian
+   * reads as an obvious circle tracking the cursor.
+   */
   vec2 gd = (u_m - uv); gd.x *= aspect;
-  float glowMask = exp(-dot(gd, gd) * 12.0);
-  float glowL = u_glow * glowMask * (filament * 1.7 + 0.10);
+  float gdist = max(0.0, length(gd) + (swirl - 0.5) * 0.34);
+  float glowMask = exp(-gdist * gdist * 15.0);
+  // no unstructured term: every bit of cursor light is carried by a strand
+  float glowL = u_glow * glowMask * filament * 1.5;
 
   vec2 ld = (u_flashP - uv); ld.x *= aspect;
-  // kept reasonably tight so a strike lights a region rather than the whole
-  // frame, which would wash out the dimmed half of the hero line
-  float boltMask = exp(-dot(ld, ld) * 7.0);
-  float boltL = u_flash * boltMask * (filament * 2.6 + 0.13);
+  float ldist = max(0.0, length(ld) + (patch - 0.5) * 0.30);
+  float boltMask = exp(-ldist * ldist * ${boltTight});
+  // only a trace of unstructured flash, so a strike still reads as a strike
+  float boltL = u_flash * boltMask * (filament * 2.5 + 0.05);
 
   float light = glowL + boltL;
   // feed the light into the field so the cloud itself lights up from within,
@@ -102,6 +117,7 @@ void main(){
   col += (hash(gl_FragCoord.xy + u_t) - 0.5) * 0.03;
   gl_FragColor = vec4(col, 1.0);
 }`;
+};
 
 type Props = {
   /** Shader speed, 0–2.5. */
@@ -150,7 +166,7 @@ export default function CloudShader({ motion = 1 }: Props) {
       window.matchMedia('(max-width: 768px)').matches;
 
     const vs = compile(gl.VERTEX_SHADER, VERT);
-    const fs = compile(gl.FRAGMENT_SHADER, buildFrag(coarse ? 4 : 6));
+    const fs = compile(gl.FRAGMENT_SHADER, buildFrag(coarse ? 4 : 6, coarse));
     const prog = gl.createProgram();
     if (!vs || !fs || !prog) {
       canvas.style.background = FALLBACK;
@@ -229,11 +245,12 @@ export default function CloudShader({ motion = 1 }: Props) {
     let flickerAt = 0;
     let flickerPower = 0;
     let scrolled = 0; // viewports scrolled since the last mobile strike
+    let scrollGate = 0.4; // re-rolled per strike so mobile never feels metronomic
 
-    // pointer devices get frequent strikes tied to movement; touch devices get
-    // sparse ones tied to scrolling, so it stays an occasional surprise
-    const MIN_GAP = coarse ? 2800 : 800;
-    const GAP_JITTER = coarse ? 3200 : 900;
+    // strikes are deliberately sparse on both: on pointer devices the cursor
+    // was producing far too many, on touch they were too rare to notice
+    const MIN_GAP = coarse ? 1900 : 1900;
+    const GAP_JITTER = coarse ? 2200 : 2400;
 
     /** Lightning rarely strikes once, so each bolt schedules a weaker echo. */
     const strike = (x: number, y: number, power: number, now: number) => {
@@ -277,20 +294,28 @@ export default function CloudShader({ motion = 1 }: Props) {
       if (coarse) {
         glow = 0; // no cursor to bloom around
         scrolled += dy;
-        if (!reduced && scrolled > 0.55 && now >= nextStrike) {
+        // a re-rolled distance gate rather than a fixed one, so strikes land
+        // on their own rhythm instead of every N viewports
+        if (!reduced && scrolled > scrollGate && now >= nextStrike) {
           scrolled = 0;
-          if (Math.random() < 0.55) {
-            strike(0.2 + Math.random() * 0.6, 0.25 + Math.random() * 0.5, 0.7 + Math.random() * 0.3, now);
-          } else {
-            nextStrike = now + 700; // skipped this time; re-roll shortly
-          }
+          scrollGate = 0.25 + Math.random() * 0.45;
+          strike(
+            0.15 + Math.random() * 0.7,
+            0.2 + Math.random() * 0.6,
+            0.5 + Math.random() * 0.4, // varied power keeps the strands small
+            now
+          );
         }
       } else {
-        // a faint light always trails the cursor, flaring as it moves
-        const target = reduced ? 0 : Math.min(1, 0.16 + stirT * 1.15);
-        glow += (target - glow) * (target > glow ? 0.16 : 0.05);
-        if (!reduced && stirT > 0.7 && now >= nextStrike) {
-          strike(mouse.tx, mouse.ty, 0.85 + Math.random() * 0.15, now);
+        /**
+         * Light only while the cursor is actually moving. A constant baseline
+         * left a halo permanently parked under the pointer, which is what
+         * made it read as an artificial circle following the mouse.
+         */
+        const target = reduced ? 0 : Math.min(0.75, stirT * 0.95);
+        glow += (target - glow) * (target > glow ? 0.15 : 0.045);
+        if (!reduced && stirT > 0.85 && now >= nextStrike) {
+          strike(mouse.tx, mouse.ty, 0.7 + Math.random() * 0.25, now);
         }
       }
 
