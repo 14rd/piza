@@ -246,11 +246,19 @@ export default function ScrollStage({ children }: { children: ReactNode }) {
 
       const startY = window.scrollY;
       const startedAt = performance.now();
-      const DURATION = 620;
+
+      /**
+       * Longer journeys take longer. A fixed duration made a jump across six
+       * scenes tear past them, while a single step felt sluggish; scaling by
+       * distance keeps the pace even however far you go.
+       */
+      const spans = Math.abs(destOf() - startY) / Math.max(1, window.innerHeight);
+      const DURATION = Math.min(1500, 560 + spans * 260);
 
       const step = (now: number) => {
         const t = Math.min(1, (now - startedAt) / DURATION);
-        const eased = 1 - Math.pow(1 - t, 3); // easeOutCubic
+        // easeInOutCubic: settles into place instead of lunging off the mark
+        const eased = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
         window.scrollTo(0, startY + (destOf() - startY) * eased);
         if (t < 1) {
           raf = requestAnimationFrame(step);
@@ -272,7 +280,8 @@ export default function ScrollStage({ children }: { children: ReactNode }) {
     };
 
     const onClick = (e: MouseEvent) => {
-      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey) return;
+      // button can be absent on synthetic/touch-derived clicks
+      if (e.defaultPrevented || (e.button ?? 0) !== 0 || e.metaKey || e.ctrlKey) return;
       const target = e.target as HTMLElement | null;
       const a = target?.closest?.('a[href^="#"]') as HTMLAnchorElement | null;
       if (!a) return;

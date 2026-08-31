@@ -89,7 +89,7 @@ input, textarea, button { font: inherit; color: inherit; }
 .pz-header {
   position: fixed; top: 0; left: 0; right: 0; z-index: 55;
   display: flex; flex-direction: column; align-items: center;
-  gap: 12px;
+  gap: clamp(16px, 2.6vh, 26px);
   padding: 18px clamp(20px,4vw,56px) 12px;
 }
 .pz-logo-link { display: flex; align-items: center; color: var(--text); }
@@ -103,6 +103,7 @@ input, textarea, button { font: inherit; color: inherit; }
   font-size: 10px; letter-spacing: .22em; text-transform: uppercase;
 }
 .pz-nav a {
+  position: relative;
   color: rgba(229,229,229,.72);
   white-space: nowrap;
   /* underline space is reserved on every link, so marking one active
@@ -110,6 +111,7 @@ input, textarea, button { font: inherit; color: inherit; }
   padding-bottom: 2px;
   border-bottom: 1px solid transparent;
   transition: color .35s var(--ease), border-color .35s var(--ease);
+  touch-action: manipulation; /* skip the double-tap-zoom wait before a tap lands */
 }
 
 /* the CTA carries a standing underline */
@@ -490,6 +492,28 @@ input, textarea, button { font: inherit; color: inherit; }
    layout and type are untouched; only per-frame effects are dialled back. */
 
 @media (pointer: coarse), (max-width: 768px) {
+  /**
+   * Touch targets. The links are 10px type, so their boxes are ~16px tall —
+   * far under the 44px a fingertip needs. Taps were landing in the gaps and
+   * doing nothing. This grows the hit area only; nothing moves visually.
+   */
+  .pz-nav { column-gap: 24px; row-gap: 32px; }
+  .pz-nav a::before {
+    content: '';
+    position: absolute;
+    left: -10px; right: -10px;
+    top: -15px; bottom: -15px;
+  }
+  .pz-logo-link::before {
+    content: '';
+    position: absolute;
+    inset: -13px -16px;
+  }
+  .pz-logo-link { position: relative; touch-action: manipulation; }
+
+  /* the header is taller now that the rows are spaced for touch */
+  .pz-scene { padding-top: 150px; }
+
   /* the reveal animates ~95 spans at once on the pull-quote; blurring each
      one is the single most expensive thing on the page. The rise and fade
      carry the effect on their own. */

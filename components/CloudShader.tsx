@@ -49,18 +49,29 @@ void main(){
   float swirl = fbm(q*3.4 + vec2(ph*2.1 + 23.0, -ph*1.6));
   f += m * (0.05 + u_stir * 1.05) * (swirl - 0.32);
   // ---- light: cursor bloom + lightning ----
+  // Ridged noise (1 - |2n-1|) peaks along thin lines rather than filling an
+  // area. Raised to a high power those ridges narrow into filaments, so the
+  // light reads as veins threading through the cloud instead of a soft ball.
+  // Both source fields are already computed above, so this costs no extra fbm.
+  float veinA = 1.0 - abs(swirl * 2.0 - 1.0);
+  veinA = pow(clamp(veinA, 0.0, 1.0), 11.0);
+  float veinB = 1.0 - abs(patch * 2.0 - 1.0);
+  veinB = pow(clamp(veinB, 0.0, 1.0), 16.0);
+  // two overlapping systems read as branching rather than one clean stripe
+  float filament = veinA + veinB * 0.7;
+
   float aspect = u_res.x / u_res.y;
+
+  // wide, soft masks: the filaments carry the shape, the mask only says where
   vec2 gd = (u_m - uv); gd.x *= aspect;
-  float g2 = dot(gd, gd);
-  float glowCore = exp(-g2 * 34.0);
-  float glowWide = exp(-g2 * 7.0);
-  float glowL = u_glow * (glowCore * 0.95 + glowWide * 0.45);
+  float glowMask = exp(-dot(gd, gd) * 12.0);
+  float glowL = u_glow * glowMask * (filament * 1.7 + 0.10);
 
   vec2 ld = (u_flashP - uv); ld.x *= aspect;
-  float l2 = dot(ld, ld);
-  float boltCore = exp(-l2 * 20.0);
-  float boltWide = exp(-l2 * 3.2);
-  float boltL = u_flash * (boltCore * 1.15 + boltWide * 0.65);
+  // kept reasonably tight so a strike lights a region rather than the whole
+  // frame, which would wash out the dimmed half of the hero line
+  float boltMask = exp(-dot(ld, ld) * 7.0);
+  float boltL = u_flash * boltMask * (filament * 2.6 + 0.13);
 
   float light = glowL + boltL;
   // feed the light into the field so the cloud itself lights up from within,
@@ -83,9 +94,10 @@ void main(){
 
   // light is applied above the ceiling, otherwise it clamps flat and reads as
   // a grey smudge. Crimson halo, alabaster core: still only brand colours.
-  col = mix(col, crim, clamp(light * 0.42, 0.0, 1.0));
-  float hot = clamp(boltCore * u_flash * 0.95 + glowCore * u_glow * 0.45, 0.0, 1.0);
-  col = mix(col, alab, hot * 0.75);
+  col = mix(col, crim, clamp(light * 0.50, 0.0, 1.0));
+  // only the brightest filament cores reach alabaster, so the light keeps
+  // thin white threads with a crimson bloom around them
+  col = mix(col, alab, clamp(light * 0.62, 0.0, 1.0) * 0.85);
 
   col += (hash(gl_FragCoord.xy + u_t) - 0.5) * 0.03;
   gl_FragColor = vec4(col, 1.0);
