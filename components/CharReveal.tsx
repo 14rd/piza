@@ -1,6 +1,7 @@
 'use client';
 
 import { createElement, useEffect, useRef, type ReactNode } from 'react';
+import { preventOrphan, preventOrphanCharified } from '@/lib/typography';
 
 /**
  * Splits an element's text nodes into per-character spans so they can be
@@ -20,7 +21,11 @@ export function charify(el: HTMLElement, stagger = true) {
         (n.textContent ?? '').split(/(\s+)/).forEach((part) => {
           if (!part) return;
           if (/^\s+$/.test(part)) {
-            frag.appendChild(document.createTextNode(' '));
+            // collapse runs of whitespace, but keep a non-breaking space
+            // non-breaking or the orphan guard would be undone here
+            frag.appendChild(
+              document.createTextNode(part.includes('\u00A0') ? '\u00A0' : ' ')
+            );
             return;
           }
           const word = document.createElement('span');
@@ -64,8 +69,12 @@ export default function CharReveal({ as = 'span', className, children }: Props) 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    // must run first: charify replaces the text nodes it needs to edit
+    preventOrphan(el);
     const stagger = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     charify(el, stagger);
+    // after charify: the word boxes it creates are what needs binding
+    preventOrphanCharified(el);
   }, []);
 
   return createElement(as, { ref, className, 'data-chars': '' }, children);

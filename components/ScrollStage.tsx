@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, type ReactNode } from 'react';
 import { SECTION_IDS } from '@/lib/content';
+import { ORPHAN_SELECTORS, preventOrphan } from '@/lib/typography';
 
 /**
  * The scroll engine.
@@ -25,6 +26,13 @@ export default function ScrollStage({ children }: { children: ReactNode }) {
       stage.querySelectorAll<HTMLElement>('section[data-screen-label]')
     );
     if (!sections.length) return;
+
+    /**
+     * Before anything is measured: CharReveal handles its own headings, this
+     * covers the body copy. Changing the text changes how it wraps, so it has
+     * to happen ahead of the scale-to-fit pass below.
+     */
+    stage.querySelectorAll<HTMLElement>(ORPHAN_SELECTORS).forEach(preventOrphan);
 
     let fit: number[] = sections.map(() => 1);
     const revealed: boolean[] = sections.map(() => false);
