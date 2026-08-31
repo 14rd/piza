@@ -134,7 +134,18 @@ input, textarea, button { font: inherit; color: inherit; }
 /* ---------- scroll spacers ---------- */
 
 .pz-spacers { position: relative; z-index: 1; pointer-events: none; }
-.pz-spacer { height: 100svh; scroll-snap-align: start; }
+
+/* --scene-stride is set on .pz-root from SCENE_STRIDE_SVH, so the scroll
+   length and the engine's maths cannot disagree */
+.pz-spacer { height: var(--scene-stride); scroll-snap-align: start; }
+
+/* trailing room so the last scene can reach the middle of the viewport.
+   lvh is the tallest the viewport gets on mobile (URL bar retracted); the
+   vh line is the fallback for browsers without lvh. */
+.pz-tail {
+  height: calc(100vh - var(--scene-stride));
+  height: calc(100lvh - var(--scene-stride));
+}
 
 /* ---------- fixed stage ---------- */
 
@@ -153,7 +164,8 @@ input, textarea, button { font: inherit; color: inherit; }
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  will-change: opacity, transform;
+  /* will-change is applied by ScrollStage only while a scene is on stage;
+     promoting all seven at once is costly on phones */
 }
 /* hero is on stage before the scroll engine's first frame */
 .pz-scene--initial { opacity: 1; visibility: visible; pointer-events: auto; }
@@ -471,6 +483,30 @@ input, textarea, button { font: inherit; color: inherit; }
 
 @media (max-width: 560px) {
   .pz-roster { grid-template-columns: 1fr; }
+}
+
+/* ---------- mobile performance ---------- */
+/* Phones composite these full-screen, every frame, on a weaker GPU. The
+   layout and type are untouched; only per-frame effects are dialled back. */
+
+@media (pointer: coarse), (max-width: 768px) {
+  /* the reveal animates ~95 spans at once on the pull-quote; blurring each
+     one is the single most expensive thing on the page. The rise and fade
+     carry the effect on their own. */
+  .pz-ch {
+    filter: none;
+    transition: opacity .85s ease, transform 1s var(--ease);
+  }
+  .pz-on .pz-ch { filter: none; }
+
+  /* full-screen blend pass over an animating canvas */
+  .pz-grain { display: none; }
+
+  /* backdrop-filter forces an extra readback of everything behind the card */
+  .pz-form {
+    backdrop-filter: none;
+    background: rgba(11,4,2,.82);
+  }
 }
 
 /* ---------- reduced motion ---------- */

@@ -64,6 +64,16 @@ export const press: PressItem[] = [
   },
 ];
 
+/**
+ * Scroll distance per scene, in `svh` units.
+ *
+ * One scene used to occupy a full viewport (100), which made getting through
+ * the page slow. Lower is faster; the crossfade maths is expressed in scene
+ * units so it rescales automatically. ScrollStage measures the rendered spacer
+ * rather than assuming this value, so the two can never drift apart.
+ */
+export const SCENE_STRIDE_SVH = 60;
+
 /** Scroll spacer ids, in scene order. Index maps 1:1 to the scene index. */
 export const SECTION_IDS = [
   'top',

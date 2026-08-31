@@ -28,6 +28,17 @@ export default function ScrollStage({ children }: { children: ReactNode }) {
 
     let fit: number[] = sections.map(() => 1);
     const revealed: boolean[] = sections.map(() => false);
+    // avoid re-writing will-change every frame
+    const promoted: boolean[] = sections.map(() => false);
+
+    /**
+     * Layout reads are cached here and refreshed on resize. Reading
+     * scrollHeight inside the scroll handler would force a synchronous
+     * layout on every event, which is a serious cost on mobile.
+     */
+    let stride = 1; // px of scroll per scene
+    let maxScroll = 1;
+    let viewportH = 1;
 
     /**
      * Scene index -> its nav link. The hero's anchor is the logo rather than a
@@ -61,6 +72,23 @@ export default function ScrollStage({ children }: { children: ReactNode }) {
      */
     const measure = () => {
       const vh = Math.max(1, window.innerHeight);
+      viewportH = vh;
+
+      /**
+       * Take the stride from a rendered spacer rather than from innerHeight.
+       * Spacers are sized in `svh`, which on mobile is the height with browser
+       * chrome showing, while innerHeight grows as the URL bar retracts. Using
+       * innerHeight would drift the scenes out of step with their anchors
+       * mid-scroll.
+       */
+      const spacer = document.querySelector<HTMLElement>('.pz-spacer');
+      stride = Math.max(1, spacer?.getBoundingClientRect().height ?? vh);
+
+      maxScroll = Math.max(
+        1,
+        document.documentElement.scrollHeight - window.innerHeight
+      );
+
       fit = sections.map((s, i) => {
         if (i === 0) return 1; // hero is intrinsically fluid
         let ch = 0;
@@ -72,33 +100,46 @@ export default function ScrollStage({ children }: { children: ReactNode }) {
       });
     };
 
-    const onScroll = () => {
-      const doc = document.documentElement;
-      const yy = window.scrollY || doc.scrollTop || 0;
+    /** Reads no layout — every value it needs was cached by measure(). */
+    const update = () => {
+      const yy = window.scrollY || document.documentElement.scrollTop || 0;
 
-      const max = doc.scrollHeight - window.innerHeight;
-      const p = max > 0 ? Math.min(1, yy / max) : 0;
+      const p = Math.min(1, yy / maxScroll);
       if (progressRef.current) {
         progressRef.current.style.width = `${(p * 100).toFixed(2)}%`;
       }
 
-      const vh = Math.max(1, window.innerHeight);
-      const pos = yy / vh;
+      /**
+       * Clamped so rubber-band overscroll, or a viewport taller than the
+       * tail pad allows for, can never fade the first or last scene out.
+       */
+      const pos = Math.min(sections.length - 1, Math.max(0, yy / stride));
 
       // the nearest scene is also the most opaque one
-      setActive(Math.min(sections.length - 1, Math.max(0, Math.round(pos))));
+      setActive(Math.round(pos));
 
       sections.forEach((s, i) => {
         const d = pos - i;
         const a = Math.max(0, 1 - Math.abs(d) * 1.6);
         const o = a * a * (3 - 2 * a); // smoothstep
         const k = fit[i] ?? 1;
+        const onStage = o >= 0.01;
 
         s.style.opacity = o.toFixed(3);
-        s.style.visibility = o < 0.01 ? 'hidden' : 'visible';
+        s.style.visibility = onStage ? 'visible' : 'hidden';
         s.style.pointerEvents = o > 0.45 ? 'auto' : 'none';
         s.style.transform =
           `translate3d(0,${(-d * 42 + (1 - k) * 60).toFixed(1)}px,0) scale(${k.toFixed(3)})`;
+
+        /**
+         * Only scenes actually on stage get a compositor layer. Promoting all
+         * seven full-viewport scenes at once costs a lot of GPU memory on
+         * phones; in practice at most two are visible.
+         */
+        if (onStage !== promoted[i]) {
+          promoted[i] = onStage;
+          s.style.willChange = onStage ? 'opacity, transform' : 'auto';
+        }
 
         // character reveals replay each time a scene takes the stage
         if (o > 0.55 && !revealed[i]) {
@@ -111,13 +152,27 @@ export default function ScrollStage({ children }: { children: ReactNode }) {
       });
     };
 
+    /**
+     * Scroll events can outpace the display, especially on high-refresh
+     * phones. Coalesce them so the DOM is touched at most once per frame.
+     */
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        ticking = false;
+        update();
+      });
+    };
+
     const onResize = () => {
       measure();
-      onScroll();
+      update();
     };
 
     measure();
-    onScroll();
+    update();
 
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onResize);

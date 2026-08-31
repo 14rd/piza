@@ -8,7 +8,13 @@ const FALLBACK =
 
 const VERT = 'attribute vec2 p; void main(){ gl_Position = vec4(p,0.,1.); }';
 
-const FRAG = `
+/**
+ * `octaves` is compiled in because a GLSL loop bound must be a constant. Each
+ * octave is another round of value noise across five fbm calls per pixel, so
+ * dropping from 6 to 4 is roughly a third off the per-pixel cost — the
+ * difference is fine detail in the cloud, which is barely visible on a phone.
+ */
+const buildFrag = (octaves: number) => `
 precision highp float;
 uniform vec2 u_res; uniform float u_t; uniform vec2 u_m; uniform float u_flow; uniform float u_energy; uniform float u_stir;
 float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7)))*43758.5453); }
@@ -19,7 +25,7 @@ float noise(vec2 p){
 }
 float fbm(vec2 p){
   float v = 0.0, a = 0.5;
-  for(int i=0;i<6;i++){ v += a*noise(p); p *= 2.02; a *= 0.5; }
+  for(int i=0;i<${octaves};i++){ v += a*noise(p); p *= 2.02; a *= 0.5; }
   return v;
 }
 void main(){
@@ -93,8 +99,16 @@ export default function CloudShader({ motion = 1 }: Props) {
       return s;
     };
 
+    /**
+     * Phones pay for this shader twice over: far more pixels per CSS pixel,
+     * and a much weaker GPU. Render fewer octaves at 1x there.
+     */
+    const coarse =
+      window.matchMedia('(pointer: coarse)').matches ||
+      window.matchMedia('(max-width: 768px)').matches;
+
     const vs = compile(gl.VERTEX_SHADER, VERT);
-    const fs = compile(gl.FRAGMENT_SHADER, FRAG);
+    const fs = compile(gl.FRAGMENT_SHADER, buildFrag(coarse ? 4 : 6));
     const prog = gl.createProgram();
     if (!vs || !fs || !prog) {
       canvas.style.background = FALLBACK;
@@ -139,11 +153,16 @@ export default function CloudShader({ motion = 1 }: Props) {
     };
     window.addEventListener('pointermove', onMove, { passive: true });
 
-    const dpr = Math.min(window.devicePixelRatio || 1, 1.6);
+    const dpr = Math.min(window.devicePixelRatio || 1, coarse ? 1 : 1.6);
     const onResize = () => {
-      canvas.width = Math.max(1, Math.floor(canvas.clientWidth * dpr));
-      canvas.height = Math.max(1, Math.floor(canvas.clientHeight * dpr));
-      gl.viewport(0, 0, canvas.width, canvas.height);
+      const w = Math.max(1, Math.floor(canvas.clientWidth * dpr));
+      const h = Math.max(1, Math.floor(canvas.clientHeight * dpr));
+      // mobile fires resize as the URL bar retracts; reallocating the drawing
+      // buffer for an unchanged size is pure cost
+      if (w === canvas.width && h === canvas.height) return;
+      canvas.width = w;
+      canvas.height = h;
+      gl.viewport(0, 0, w, h);
     };
     window.addEventListener('resize', onResize);
     onResize();
@@ -188,8 +207,21 @@ export default function CloudShader({ motion = 1 }: Props) {
     };
     loop();
 
+    // don't burn battery rendering a page nobody is looking at
+    const onVisibility = () => {
+      if (document.hidden) {
+        cancelAnimationFrame(raf);
+        raf = 0;
+      } else if (!raf) {
+        lastY = window.scrollY || 0; // resume without a phantom scroll burst
+        loop();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+
     return () => {
       cancelAnimationFrame(raf);
+      document.removeEventListener('visibilitychange', onVisibility);
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('resize', onResize);
       gl.deleteProgram(prog);
