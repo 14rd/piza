@@ -54,9 +54,24 @@ length; the seven scenes are absolutely positioned on a fixed stage and
   of `max(0, 1 - |d|·1.6)`, plus a 42px parallax drift and a scale-to-fit factor.
   It mutates styles directly on the DOM — **no React state, no re-render per
   frame**. Keep it that way.
-- `components/CloudShader.tsx` — 6-octave domain-warped fbm cloud. Scroll
-  advances the field's evolution (it never translates); cursor movement stirs
-  local turbulence. Falls back to a CSS gradient without WebGL.
+- `components/CloudShader.tsx` — domain-warped fbm cloud. Scroll advances the
+  field's evolution (it never translates); cursor movement stirs local
+  turbulence. Falls back to a CSS gradient without WebGL.
+  - **Lighting.** Two light sources feed into the noise field before the
+    palette ramp, so the cloud lights up from within rather than showing a
+    flat disc: a soft bloom trailing the cursor that flares with pointer
+    speed, and lightning strikes with a fast decay and a weaker echo. Strikes
+    fire off fast cursor movement on pointer devices, and off scroll distance
+    with a random gate on touch devices, where there is no cursor. Both are
+    applied *after* the palette ceiling, otherwise they clamp flat and read as
+    grey. Colours stay in palette: crimson halo, alabaster core.
+  - Tuning lives at the top of the render loop: `MIN_GAP` / `GAP_JITTER`
+    control how often strikes land.
+- **Anchor scrolling** is animated by hand in `ScrollStage`, not via
+  `scrollTo({behavior:'smooth'})`. Mobile aborts a native smooth scroll when
+  the viewport changes, and the URL bar retracting mid-scroll does exactly
+  that, so taps used to land short. Snapping is suspended during the
+  animation and a timeout guarantees it lands even if frames stall.
 - `components/CharReveal.tsx` — splits text into per-character spans with a
   random 0–0.75s stagger. The stage adds `.pz-on` when a scene passes 55%
   opacity and removes it below 6%, so reveals replay on every re-entry.

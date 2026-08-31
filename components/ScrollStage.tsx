@@ -190,9 +190,89 @@ export default function ScrollStage({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  // in-page anchors smooth-scroll to their spacer
+  /**
+   * In-page anchors scroll to their spacer.
+   *
+   * This animates by hand rather than using scrollTo({behavior:'smooth'}).
+   * On mobile the browser aborts a native smooth scroll when the viewport
+   * changes, and the URL bar retracting as the page moves does exactly that,
+   * so taps landed short of the target. Scroll snapping fights it too.
+   *
+   * Owning the animation means: snapping is suspended while it runs, the
+   * destination is re-read every frame so a layout shift cannot strand it,
+   * and any real user input cancels it.
+   */
   useEffect(() => {
+    const root = document.documentElement;
+    let raf = 0;
+    let safety = 0;
+    let cleanupInput: (() => void) | null = null;
+
+    const finish = () => {
+      cancelAnimationFrame(raf);
+      raf = 0;
+      clearTimeout(safety);
+      safety = 0;
+      root.style.scrollSnapType = ''; // back to the stylesheet's value
+      cleanupInput?.();
+      cleanupInput = null;
+    };
+
+    const scrollToEl = (el: HTMLElement) => {
+      finish();
+
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const destOf = () => {
+        const abs = el.getBoundingClientRect().top + window.scrollY;
+        const maxY = Math.max(0, root.scrollHeight - window.innerHeight);
+        return Math.max(0, Math.min(maxY, abs));
+      };
+
+      if (reduced) {
+        window.scrollTo(0, destOf());
+        return;
+      }
+
+      // snapping pulls against a programmatic scroll while it is in flight
+      root.style.scrollSnapType = 'none';
+
+      const cancel = () => finish();
+      window.addEventListener('touchstart', cancel, { passive: true });
+      window.addEventListener('wheel', cancel, { passive: true });
+      cleanupInput = () => {
+        window.removeEventListener('touchstart', cancel);
+        window.removeEventListener('wheel', cancel);
+      };
+
+      const startY = window.scrollY;
+      const startedAt = performance.now();
+      const DURATION = 620;
+
+      const step = (now: number) => {
+        const t = Math.min(1, (now - startedAt) / DURATION);
+        const eased = 1 - Math.pow(1 - t, 3); // easeOutCubic
+        window.scrollTo(0, startY + (destOf() - startY) * eased);
+        if (t < 1) {
+          raf = requestAnimationFrame(step);
+        } else {
+          finish();
+        }
+      };
+      raf = requestAnimationFrame(step);
+
+      /**
+       * If frames never arrive — a throttled or backgrounded tab — land on
+       * the target anyway rather than stranding the page part-way with
+       * snapping still disabled.
+       */
+      safety = window.setTimeout(() => {
+        window.scrollTo(0, destOf());
+        finish();
+      }, DURATION + 400);
+    };
+
     const onClick = (e: MouseEvent) => {
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey) return;
       const target = e.target as HTMLElement | null;
       const a = target?.closest?.('a[href^="#"]') as HTMLAnchorElement | null;
       if (!a) return;
@@ -200,12 +280,14 @@ export default function ScrollStage({ children }: { children: ReactNode }) {
       const el = id ? document.getElementById(id) : null;
       if (!el) return;
       e.preventDefault();
-      const y = el.getBoundingClientRect().top + (window.scrollY || 0);
-      window.scrollTo({ top: y, behavior: 'smooth' });
+      scrollToEl(el);
     };
 
     document.addEventListener('click', onClick);
-    return () => document.removeEventListener('click', onClick);
+    return () => {
+      document.removeEventListener('click', onClick);
+      finish();
+    };
   }, []);
 
   return (

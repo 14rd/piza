@@ -17,6 +17,9 @@ const VERT = 'attribute vec2 p; void main(){ gl_Position = vec4(p,0.,1.); }';
 const buildFrag = (octaves: number) => `
 precision highp float;
 uniform vec2 u_res; uniform float u_t; uniform vec2 u_m; uniform float u_flow; uniform float u_energy; uniform float u_stir;
+uniform float u_glow;   // cursor bloom, rises with pointer speed
+uniform float u_flash;  // lightning strike, fast decay
+uniform vec2  u_flashP; // where the strike landed
 float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7)))*43758.5453); }
 float noise(vec2 p){
   vec2 i = floor(p), f = fract(p);
@@ -45,6 +48,25 @@ void main(){
   float m = exp(-dot(md,md)*3.0);
   float swirl = fbm(q*3.4 + vec2(ph*2.1 + 23.0, -ph*1.6));
   f += m * (0.05 + u_stir * 1.05) * (swirl - 0.32);
+  // ---- light: cursor bloom + lightning ----
+  float aspect = u_res.x / u_res.y;
+  vec2 gd = (u_m - uv); gd.x *= aspect;
+  float g2 = dot(gd, gd);
+  float glowCore = exp(-g2 * 34.0);
+  float glowWide = exp(-g2 * 7.0);
+  float glowL = u_glow * (glowCore * 0.95 + glowWide * 0.45);
+
+  vec2 ld = (u_flashP - uv); ld.x *= aspect;
+  float l2 = dot(ld, ld);
+  float boltCore = exp(-l2 * 20.0);
+  float boltWide = exp(-l2 * 3.2);
+  float boltL = u_flash * (boltCore * 1.15 + boltWide * 0.65);
+
+  float light = glowL + boltL;
+  // feed the light into the field so the cloud itself lights up from within,
+  // rather than a flat disc floating over the top
+  f += light * 0.40;
+
   f = pow(clamp(f, 0.0, 1.0), 0.86);
   vec3 base = vec3(0.043,0.016,0.008);   // near-black ground
   vec3 mah  = vec3(0.184,0.055,0.0);     // #2F0E00 rich mahogany
@@ -56,7 +78,15 @@ void main(){
   col = mix(col, alab, pow(smoothstep(0.82,1.0,f), 2.2) * 0.30);
   float vig = smoothstep(1.5, 0.1, length((uv-vec2(0.5,0.45))*vec2(1.1,1.28)));
   col *= 0.46 + vig*0.54;
+  // ambient field stays inside the palette ceiling
   col = min(col, max(crim, alab * 0.30));
+
+  // light is applied above the ceiling, otherwise it clamps flat and reads as
+  // a grey smudge. Crimson halo, alabaster core: still only brand colours.
+  col = mix(col, crim, clamp(light * 0.42, 0.0, 1.0));
+  float hot = clamp(boltCore * u_flash * 0.95 + glowCore * u_glow * 0.45, 0.0, 1.0);
+  col = mix(col, alab, hot * 0.75);
+
   col += (hash(gl_FragCoord.xy + u_t) - 0.5) * 0.03;
   gl_FragColor = vec4(col, 1.0);
 }`;
@@ -138,6 +168,9 @@ export default function CloudShader({ motion = 1 }: Props) {
     const uFlow = gl.getUniformLocation(prog, 'u_flow');
     const uEnergy = gl.getUniformLocation(prog, 'u_energy');
     const uStir = gl.getUniformLocation(prog, 'u_stir');
+    const uGlow = gl.getUniformLocation(prog, 'u_glow');
+    const uFlash = gl.getUniformLocation(prog, 'u_flash');
+    const uFlashP = gl.getUniformLocation(prog, 'u_flashP');
 
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -175,9 +208,35 @@ export default function CloudShader({ motion = 1 }: Props) {
     let stir = 0;
     let lastY = window.scrollY || 0;
 
+    // ---- lighting state ----
+    let glow = 0;
+    let flash = 0;
+    let flashX = 0.5;
+    let flashY = 0.55;
+    let nextStrike = 0; // earliest timestamp for the next strike
+    let flickerAt = 0;
+    let flickerPower = 0;
+    let scrolled = 0; // viewports scrolled since the last mobile strike
+
+    // pointer devices get frequent strikes tied to movement; touch devices get
+    // sparse ones tied to scrolling, so it stays an occasional surprise
+    const MIN_GAP = coarse ? 2800 : 800;
+    const GAP_JITTER = coarse ? 3200 : 900;
+
+    /** Lightning rarely strikes once, so each bolt schedules a weaker echo. */
+    const strike = (x: number, y: number, power: number, now: number) => {
+      flashX = x;
+      flashY = y;
+      flash = Math.max(flash, power);
+      flickerAt = now + 70 + Math.random() * 130;
+      flickerPower = power * (0.4 + Math.random() * 0.35);
+      nextStrike = now + MIN_GAP + Math.random() * GAP_JITTER;
+    };
+
     const loop = () => {
-      mouse.x += (mouse.tx - mouse.x) * 0.055;
-      mouse.y += (mouse.ty - mouse.y) * 0.055;
+      // was 0.055, which left the light trailing well behind the cursor
+      mouse.x += (mouse.tx - mouse.x) * 0.12;
+      mouse.y += (mouse.ty - mouse.y) * 0.12;
 
       const doc = document.documentElement;
       const y = window.scrollY || doc.scrollTop || 0;
@@ -193,6 +252,36 @@ export default function CloudShader({ motion = 1 }: Props) {
       stirT *= 0.945;
       stir += (stirT - stir) * 0.08;
 
+      // ---- lighting ----
+      const now = performance.now();
+
+      if (flickerPower > 0 && now >= flickerAt) {
+        flash = Math.max(flash, flickerPower);
+        flickerPower = 0;
+      }
+      flash *= 0.885; // sharp falloff is what makes it read as a strike
+      if (flash < 0.001) flash = 0;
+
+      if (coarse) {
+        glow = 0; // no cursor to bloom around
+        scrolled += dy;
+        if (!reduced && scrolled > 0.55 && now >= nextStrike) {
+          scrolled = 0;
+          if (Math.random() < 0.55) {
+            strike(0.2 + Math.random() * 0.6, 0.25 + Math.random() * 0.5, 0.7 + Math.random() * 0.3, now);
+          } else {
+            nextStrike = now + 700; // skipped this time; re-roll shortly
+          }
+        }
+      } else {
+        // a faint light always trails the cursor, flaring as it moves
+        const target = reduced ? 0 : Math.min(1, 0.16 + stirT * 1.15);
+        glow += (target - glow) * (target > glow ? 0.16 : 0.05);
+        if (!reduced && stirT > 0.7 && now >= nextStrike) {
+          strike(mouse.tx, mouse.ty, 0.85 + Math.random() * 0.15, now);
+        }
+      }
+
       const speed = (motionRef.current ?? 1) * (reduced ? 0.2 : 1);
 
       gl.uniform2f(uRes, canvas.width, canvas.height);
@@ -201,6 +290,9 @@ export default function CloudShader({ motion = 1 }: Props) {
       gl.uniform1f(uFlow, flow);
       gl.uniform1f(uEnergy, energy);
       gl.uniform1f(uStir, stir);
+      gl.uniform1f(uGlow, glow);
+      gl.uniform1f(uFlash, flash);
+      gl.uniform2f(uFlashP, flashX, flashY);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
 
       raf = requestAnimationFrame(loop);
