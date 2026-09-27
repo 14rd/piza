@@ -1,24 +1,16 @@
 import type { Metadata, Viewport } from 'next';
-import { Space_Grotesk } from 'next/font/google';
 import './globals.css';
 
-// self-hosted at build time; no runtime request to Google
-const spaceGrotesk = Space_Grotesk({
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '700'],
-  variable: '--font-space-grotesk',
-  display: 'swap',
-});
+const DESCRIPTION =
+  'PIZA is a next-gen talent venture studio and creative IP accelerator helping digital creators, entertainers, and storytellers build, co-own, and scale media empires. Founded in Los Angeles by Stephanie Piza.';
 
 export const metadata: Metadata = {
   title: 'PIZA — Representation 2.0',
-  description:
-    'PIZA is a creator-first talent management company turning cultural influence into ownership. Founded in Los Angeles by Stephanie Piza.',
+  description: DESCRIPTION,
   metadataBase: new URL('https://piza.studiosubtract.com'),
   openGraph: {
     title: 'PIZA — Representation 2.0',
-    description:
-      'PIZA is a creator-first talent management company turning cultural influence into ownership. Founded in Los Angeles by Stephanie Piza.',
+    description: DESCRIPTION,
     type: 'website',
     locale: 'en_US',
   },
@@ -36,9 +28,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={spaceGrotesk.variable}>
+    <html lang="en">
       <head>
         <link rel="preconnect" href="https://api.fontshare.com" />
+        <link rel="preconnect" href="https://cdn.fontshare.com" crossOrigin="anonymous" />
+        {/* General Sans for display, Satoshi for body. One link per family:
+            Fontshare's CSS endpoint only serves the first `f[]` it is given. */}
+        <link
+          rel="stylesheet"
+          href="https://api.fontshare.com/v2/css?f[]=general-sans@300,400,500&display=swap"
+        />
         <link
           rel="stylesheet"
           href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700&display=swap"

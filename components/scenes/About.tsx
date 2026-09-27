@@ -1,20 +1,24 @@
 import CharReveal from '../CharReveal';
 import Scene from '../Scene';
-import { scope, values } from '@/lib/content';
+import { about, scope, values } from '@/lib/content';
 
 export default function About() {
   return (
     <Scene label="About">
       <div className="pz-col pz-about">
-        <CharReveal as="h2" className="pz-h2">
-          PIZA exists to shift power.
+        <CharReveal as="h2" className="pz-h2 pz-about-h2">
+          {about.headline.map((line, i) => (
+            <span key={line} className={i === about.headline.length - 1 ? undefined : 'pz-line'}>
+              {line}
+            </span>
+          ))}
         </CharReveal>
 
-        <p className="pz-about-lede">
-          Culture has always been built by underrepresented creators, yet ownership
-          has remained elsewhere. PIZA closes the gap between influence and equity —
-          infrastructure designed for creators to lead, build, and own.
-        </p>
+        <div className="pz-about-lede">
+          {about.body.map((p) => (
+            <p key={p}>{p}</p>
+          ))}
+        </div>
 
         <div className="pz-3">
           {scope.map((row) => (

@@ -1,6 +1,7 @@
 import CharReveal from '../CharReveal';
 import ContactForm from '../ContactForm';
 import Scene from '../Scene';
+import { CONTACT, ROSTER_REQUEST_HREF } from '@/lib/content';
 
 export default function Contact() {
   return (
@@ -21,17 +22,25 @@ export default function Contact() {
         </div>
 
         <div className="pz-contact-links">
-          <a href="mailto:inbox@piza.global" className="pz-email">
-            inbox@piza.global
+          <a href={`mailto:${CONTACT.founder}`} className="pz-email">
+            {CONTACT.founder}
           </a>
-          <a
-            href="https://instagram.com/piza.global"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="pz-ig"
-          >
-            @piza.global ↗
+          <a href={`mailto:${CONTACT.inbox}`} className="pz-email pz-email--secondary">
+            {CONTACT.inbox}
           </a>
+          <div className="pz-contact-meta">
+            <a
+              href={CONTACT.instagram}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="pz-ig"
+            >
+              {CONTACT.instagramHandle} ↗
+            </a>
+            <a href={ROSTER_REQUEST_HREF} className="pz-ig">
+              Request roster
+            </a>
+          </div>
         </div>
 
         <ContactForm />

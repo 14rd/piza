@@ -8,7 +8,10 @@
   --crimson: #930F12;
   --mahogany: #2F0E00;
   --ease: cubic-bezier(.16, 1, .3, 1);
-  --display: var(--font-space-grotesk), 'Space Grotesk', sans-serif;
+  /* General Sans: geometric structure with a quieter, more editorial voice,
+     the closest open match to Polymath, the typeface in the brand guidelines.
+     Swap this one token if Polymath is licensed later. */
+  --display: 'General Sans', 'Polymath', system-ui, sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -184,11 +187,11 @@ input, textarea, button { font: inherit; color: inherit; }
   margin: 0;
   max-width: 16ch;
   font-family: var(--display);
-  font-weight: 400;
+  font-weight: 300;
   /* the lower bound is what phones actually get, since 7vw is far below it */
   font-size: clamp(38px,7vw,116px);
   line-height: 1.02;
-  letter-spacing: -.045em;
+  letter-spacing: -.035em;
   color: var(--text);
   text-wrap: balance;
 }
@@ -204,8 +207,8 @@ input, textarea, button { font: inherit; color: inherit; }
   /* at the old 28px floor, 24ch came to ~336px against 335px of usable
      width on a 375px phone, so the quote ran edge to edge */
   font-size: clamp(24px,4.6vw,78px);
-  line-height: 1.08;
-  letter-spacing: -.04em;
+  line-height: 1.1;
+  letter-spacing: -.03em;
   color: var(--text);
   text-wrap: balance;
 }
@@ -218,21 +221,26 @@ input, textarea, button { font: inherit; color: inherit; }
 .pz-h2 {
   margin: 0;
   font-family: var(--display);
-  font-weight: 400;
+  font-weight: 300;
   font-size: clamp(30px,4vw,64px);
-  line-height: 1.04;
-  letter-spacing: -.036em;
+  line-height: 1.06;
+  letter-spacing: -.03em;
   color: var(--text);
 }
 
+/* three stacked statements */
+.pz-about-h2 { font-size: clamp(24px,3.1vw,50px); text-wrap: balance; }
+.pz-line { display: block; }
+
 .pz-about-lede {
-  margin: 0;
-  max-width: 56ch;
+  display: flex; flex-direction: column;
+  gap: .9em;
+  max-width: 60ch;
   font-size: clamp(15px,1.1vw,18px);
   line-height: 1.62;
   color: rgba(229,229,229,.74);
-  text-wrap: pretty;
 }
+.pz-about-lede p { margin: 0; text-wrap: pretty; }
 
 .pz-3 {
   display: grid;
@@ -251,7 +259,7 @@ input, textarea, button { font: inherit; color: inherit; }
 .pz-3-title {
   margin: 0;
   font-family: var(--display);
-  font-weight: 400;
+  font-weight: 500;
   font-size: clamp(16px,1.3vw,20px);
   line-height: 1.15;
   letter-spacing: -.02em;
@@ -276,47 +284,41 @@ input, textarea, button { font: inherit; color: inherit; }
   color: rgba(229,229,229,.85);
 }
 
-/* ---------- 4. roster ---------- */
+/* ---------- 4. roster (on request) ---------- */
 
-.pz-roster-wrap { gap: clamp(22px,3.4vh,40px); max-width: 1160px; width: 100%; }
+.pz-roster-wrap { gap: clamp(18px,2.8vh,30px); max-width: 760px; width: 100%; }
+.pz-roster-h2 { font-size: clamp(30px,4.2vw,66px); }
 .pz-roster-lede {
   margin: 0;
-  max-width: 58ch;
+  max-width: 54ch;
   font-size: clamp(15px,1.15vw,19px);
   line-height: 1.6;
   color: rgba(229,229,229,.78);
   text-wrap: pretty;
 }
-.pz-roster {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1px;
-  background: rgba(229,229,229,.14);
-  width: 100%;
-}
-.pz-roster-tile {
-  background: rgba(11,4,2,.55);
-  min-height: clamp(110px,16vh,190px);
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  gap: 8px;
-  padding: clamp(18px,2vw,28px);
-  transition: background .6s var(--ease);
-}
-.pz-roster-tile:hover { background: rgba(147,15,18,.24); }
-.pz-roster-name {
-  font-family: var(--display);
-  font-size: clamp(18px,1.6vw,25px);
-  line-height: 1.1;
-  letter-spacing: -.02em;
-  color: var(--text);
-}
-.pz-roster-disc {
+.pz-roster-note {
   font-size: 10px;
-  letter-spacing: .22em;
+  letter-spacing: .18em;
   text-transform: uppercase;
-  color: rgba(229,229,229,.62);
+  color: rgba(229,229,229,.45);
 }
+
+/* pill call-to-action, shared by the roster request and the bio */
+.pz-button {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 13px 30px;
+  border: 1px solid rgba(229,229,229,.35);
+  border-radius: 999px;
+  background: transparent;
+  font-family: 'Satoshi', system-ui, sans-serif;
+  font-size: 10px;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+  color: var(--text);
+  cursor: pointer;
+  transition: background .45s var(--ease), border-color .4s, color .4s;
+}
+.pz-button:hover { background: var(--text); border-color: var(--text); color: var(--mahogany); }
 
 /* ---------- 5. founder ---------- */
 
@@ -328,6 +330,12 @@ input, textarea, button { font: inherit; color: inherit; }
   overflow: hidden;
   border: 1px solid rgba(229,229,229,.18);
   display: flex; align-items: center; justify-content: center;
+}
+.pz-portrait-img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
 }
 .pz-portrait-fill {
   position: absolute; inset: 0;
@@ -351,6 +359,8 @@ input, textarea, button { font: inherit; color: inherit; }
   color: rgba(229,229,229,.76);
   text-wrap: pretty;
 }
+.pz-bio-open { margin-top: 2px; }
+
 .pz-track {
   display: flex; justify-content: center;
   gap: clamp(28px,4vw,64px);
@@ -359,8 +369,9 @@ input, textarea, button { font: inherit; color: inherit; }
 .pz-track-item { display: flex; flex-direction: column; align-items: center; gap: 7px; }
 .pz-track-k {
   font-family: var(--display);
+  font-weight: 400;
   font-size: clamp(18px,1.7vw,28px);
-  letter-spacing: -.03em;
+  letter-spacing: -.02em;
   color: var(--text);
 }
 .pz-track-v {
@@ -375,7 +386,156 @@ input, textarea, button { font: inherit; color: inherit; }
   text-wrap: balance;
 }
 
-/* ---------- 6. press / notes ---------- */
+/* ---------- 5b. full biography overlay ---------- */
+
+.pz-biodlg {
+  position: fixed; inset: 0;
+  width: 100vw; height: 100dvh;
+  max-width: none; max-height: none;
+  margin: 0; padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  z-index: 100;
+}
+.pz-biodlg:not([open]) { display: none; }
+.pz-biodlg::backdrop { background: rgba(11,4,2,.86); backdrop-filter: blur(12px); }
+.pz-biodlg-panel {
+  position: relative;
+  width: 100%; height: 100%;
+  background: rgba(11,4,2,.88);
+}
+ /* keeps the close control legible over scrolled text */
+.pz-biodlg-panel::before {
+  content: '';
+  position: absolute; left: 0; right: 0; top: 0;
+  height: 84px;
+  background: linear-gradient(180deg, rgba(11,4,2,.96), rgba(11,4,2,0));
+  pointer-events: none;
+  z-index: 1;
+}
+.pz-biodlg-close {
+  position: absolute; top: 18px; right: clamp(20px,3vw,44px);
+  z-index: 2;
+  padding: 10px 20px;
+  border: 1px solid rgba(229,229,229,.35);
+  border-radius: 999px;
+  background: rgba(11,4,2,.6);
+  font-size: 10px;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background .45s var(--ease), border-color .4s, color .4s;
+}
+.pz-biodlg-close:hover { background: var(--text); border-color: var(--text); color: var(--mahogany); }
+.pz-biodlg-scroll {
+  height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: clamp(84px,12vh,120px) clamp(24px,5vw,72px) clamp(60px,10vh,120px);
+}
+.pz-biodlg-grid {
+  display: grid;
+  grid-template-columns: minmax(200px, 280px) minmax(0, 60ch);
+  gap: clamp(32px,5vw,88px);
+  justify-content: center;
+  margin: 0 auto;
+  max-width: 1120px;
+  text-align: left;
+}
+.pz-biodlg-side {
+  position: sticky; top: 0;
+  align-self: start;
+  display: flex; flex-direction: column; gap: 16px;
+}
+.pz-biodlg-portrait {
+  width: 100%;
+  aspect-ratio: 4/5;
+  object-fit: cover;
+  display: block;
+  border: 1px solid rgba(229,229,229,.18);
+}
+.pz-biodlg-kicker {
+  font-size: 10px;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+  color: rgba(229,229,229,.55);
+}
+.pz-biodlg-title {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 300;
+  font-size: clamp(30px,3.4vw,52px);
+  line-height: 1.02;
+  letter-spacing: -.03em;
+}
+.pz-biodlg-text {
+  display: flex; flex-direction: column;
+  gap: 1.15em;
+  font-size: clamp(15px,1.15vw,18px);
+  line-height: 1.7;
+  color: rgba(229,229,229,.8);
+}
+.pz-biodlg-text p { margin: 0; text-wrap: pretty; }
+.pz-biodlg-text p:first-child {
+  font-family: var(--display);
+  font-weight: 300;
+  font-size: clamp(19px,1.6vw,26px);
+  line-height: 1.35;
+  letter-spacing: -.015em;
+  color: var(--text);
+}
+
+/* ---------- 6. press ---------- */
+
+.pz-interview {
+  display: flex; flex-direction: column; align-items: center;
+  width: 100%;
+}
+.pz-video {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  aspect-ratio: 16/9;
+  overflow: hidden;
+  background: #000;
+  border: 1px solid rgba(229,229,229,.18);
+}
+.pz-video-frame { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; display: block; }
+.pz-video-poster {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  padding: 0; border: 0;
+  background: #000;
+  cursor: pointer;
+  display: block;
+}
+.pz-video-poster img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+  opacity: .78;
+  transform: scale(1.01);
+  transition: opacity .6s var(--ease), transform 1.4s var(--ease);
+}
+.pz-video-poster:hover img { opacity: .92; transform: scale(1.03); }
+.pz-video-play {
+  position: absolute; left: 50%; top: 50%;
+  width: 64px; height: 64px;
+  margin: -32px 0 0 -32px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid rgba(229,229,229,.7);
+  border-radius: 999px;
+  background: rgba(11,4,2,.45);
+  color: var(--text);
+  backdrop-filter: blur(6px);
+  transition: background .45s var(--ease), border-color .4s, color .4s;
+}
+.pz-video-play svg { margin-left: 3px; }
+.pz-video-poster:hover .pz-video-play { background: var(--text); border-color: var(--text); color: var(--mahogany); }
+.pz-note--interview { padding-top: clamp(14px,2vh,22px); }
+
 
 .pz-notes { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 880px; }
 .pz-note {
@@ -383,7 +543,7 @@ input, textarea, button { font: inherit; color: inherit; }
   text-align: center;
   gap: 10px;
   width: 100%;
-  padding: clamp(20px,3vh,34px) 0;
+  padding: clamp(16px,2.4vh,26px) 0;
   border-bottom: 1px solid rgba(229,229,229,.12);
   color: var(--text);
   transition: background .5s var(--ease);
@@ -399,7 +559,7 @@ input, textarea, button { font: inherit; color: inherit; }
 .pz-note-title {
   font-family: var(--display);
   font-weight: 400;
-  font-size: clamp(18px,2vw,30px);
+  font-size: clamp(17px,1.7vw,26px);
   line-height: 1.15;
   letter-spacing: -.028em;
   max-width: 30ch;
@@ -422,6 +582,12 @@ input, textarea, button { font: inherit; color: inherit; }
   transition: color .4s;
 }
 .pz-email:hover { color: var(--crimson); }
+.pz-email--secondary { font-size: clamp(15px,1.3vw,19px); color: rgba(229,229,229,.6); }
+.pz-contact-meta {
+  display: flex; flex-wrap: wrap; justify-content: center;
+  gap: 8px 22px;
+  margin-top: 4px;
+}
 .pz-ig {
   font-size: 11px;
   letter-spacing: .2em;
@@ -473,6 +639,13 @@ input, textarea, button { font: inherit; color: inherit; }
   transition: background .45s var(--ease), border-color .4s, color .4s;
 }
 .pz-submit:hover { background: var(--text); border-color: var(--text); color: var(--mahogany); }
+.pz-form-note {
+  align-self: center;
+  font-size: 9px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: rgba(229,229,229,.38);
+}
 
 .pz-footer {
   font-size: 10px;
@@ -485,12 +658,14 @@ input, textarea, button { font: inherit; color: inherit; }
 
 @media (max-width: 960px) {
   .pz-3 { grid-template-columns: 1fr; }
-  .pz-roster { grid-template-columns: 1fr 1fr; }
   .pz-hide-sm { display: none; }
 }
 
-@media (max-width: 560px) {
-  .pz-roster { grid-template-columns: 1fr; }
+@media (max-width: 760px) {
+  .pz-biodlg-grid { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+  .pz-biodlg-side { position: static; }
+  .pz-biodlg-portrait { width: min(46vw, 200px); }
+  .pz-biodlg-scroll { padding-top: 78px; }
 }
 
 /* ---------- mobile performance ---------- */
@@ -520,6 +695,11 @@ input, textarea, button { font: inherit; color: inherit; }
   /* the header is taller now that the rows are spaced for touch */
   .pz-scene { padding-top: 150px; }
 
+  /* three columns have to share ~330px: equal grid tracks so a long label
+     wraps inside its own column instead of pushing into the next */
+  .pz-track { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; width: 100%; }
+  .pz-track-v { max-width: none; font-size: 9px; letter-spacing: .1em; }
+
   /* the reveal animates ~95 spans at once on the pull-quote; blurring each
      one is the single most expensive thing on the page. The rise and fade
      carry the effect on their own. */
@@ -537,6 +717,8 @@ input, textarea, button { font: inherit; color: inherit; }
     backdrop-filter: none;
     background: rgba(11,4,2,.82);
   }
+  .pz-biodlg::backdrop { backdrop-filter: none; background: rgba(11,4,2,.94); }
+  .pz-video-play { backdrop-filter: none; }
 }
 
 /* ---------- reduced motion ---------- */
@@ -552,5 +734,5 @@ input, textarea, button { font: inherit; color: inherit; }
     transition-delay: 0s !important;
   }
   .pz-grain { display: none; }
-  .pz-roster-tile, .pz-note, .pz-submit, .pz-email { transition-duration: .01ms; }
+  .pz-note, .pz-submit, .pz-button, .pz-email, .pz-video-poster img { transition-duration: .01ms; }
 }

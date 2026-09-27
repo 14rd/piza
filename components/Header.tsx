@@ -5,7 +5,7 @@ const NAV = [
   { href: '#essence', label: 'About' },
   { href: '#roster', label: 'Roster' },
   { href: '#founder', label: 'Founder' },
-  { href: '#notes', label: 'Notes', hideSmall: true },
+  { href: '#press', label: 'Press', hideSmall: true },
 ];
 
 export default function Header() {

@@ -14,9 +14,12 @@ not a corporate agency template.
 
 - **Stack:** Next.js 15 (App Router) + React 19, TypeScript. `output: 'export'`
   produces a fully static site; there is no server runtime.
-- **Fonts:** display **Space Grotesk** via `next/font/google` (self-hosted into
-  the bundle at build, so no runtime request to Google); body **Satoshi** from
-  Fontshare via a stylesheet link in `app/layout.tsx`.
+- **Fonts:** display **General Sans**, body **Satoshi**, both from Fontshare
+  via stylesheet links in `app/layout.tsx` (one link per family: Fontshare's
+  CSS endpoint only serves the first `f[]` it is given). The brand guidelines
+  name **Polymath** (Indian Type Foundry, commercial) as the main typeface;
+  General Sans is the closest open match. If Polymath is licensed, self-host
+  it and change the `--display` token in `app/globals.css`.
 - **No CSS framework.** All styling is hand-written in `app/globals.css`.
 
 ## Where it lives
@@ -77,8 +80,17 @@ length; the seven scenes are absolutely positioned on a fixed stage and
   opacity and removes it below 6%, so reveals replay on every re-entry.
 
 ### Scene order
-`Hero → Why PIZA → About → Roster → Founder → Press/Notes → Contact`
-(spacer ids: `top, manifesto, essence, roster, founder, notes, contact`)
+`Hero → Why PIZA → About → Roster (on request) → Founder → Press → Contact`
+(spacer ids: `top, manifesto, essence, roster, founder, press, contact`)
+
+- **Roster** is not published. The scene is a short statement and a
+  `Request roster` button that opens a pre-addressed email to the founder.
+- **Founder** shows the first paragraph of the bio; the full six-paragraph bio
+  opens in a native `<dialog>` (`components/FounderBio.tsx`) because a fixed,
+  crossfading stage cannot hold that much copy.
+- **Press** leads with the SpringHill *Call My People* interview
+  (`components/InterviewEmbed.tsx`): a self-hosted poster, and the YouTube
+  player is only loaded on click.
 
 ### Scale-to-fit
 Scenes taller than the viewport shrink rather than clip. `ScrollStage` sums each
@@ -104,20 +116,27 @@ No shadows. Micro-labels are 10px, letter-spacing .2–.24em, uppercase.
 
 ## Open items
 
-1. **Roster is placeholder.** Only two clients are confirmed (Vic Mensa, Edgar
-   Esteves); they repeat 3× to fill the 3×2 grid, per the design handoff. Real
-   roster and six portraits are pending from the client. Edit `lib/content.ts`.
-2. **Founder portrait pending.** The 4:5 slot in `components/scenes/Founder.tsx`
-   renders a "Portrait / awaiting" placeholder.
-3. **Contact form has no endpoint.** `components/ContactForm.tsx` calls
-   `preventDefault()` and flips a label. Nothing is sent anywhere. Wire it to a
-   form service or a mailto before launch.
-4. **Confirm contact details** — `inbox@piza.global` and `@piza.global`.
+1. **Founder portrait.** Save the client's photo as
+   `public/assets/stephanie-piza.jpg` (4:5 crop works best, ~1200px wide) and
+   push. `components/scenes/Founder.tsx` checks for the file at build time and
+   swaps the placeholder for the image automatically.
+2. **Contact form has no backend.** Submitting composes an email to
+   `stephanie@piza.global` in the visitor's mail app with the fields filled in.
+   Replace with a form service if the client wants submissions stored.
+3. **Variety link** in `lib/content.ts` still points at variety.com's home page;
+   swap in the article URL when the client has it.
+4. **Polymath licence** — see Fonts above.
+
+## Client notes, September 2026 (applied)
+
+Font changed to something more elevated that sits with the logo; About copy
+replaced; roster taken down and replaced with a request; full founder bio;
+interview added to Press; `stephanie@piza.global` added to Get in touch.
 
 ## Copy rules
 
 - All copy in `lib/content.ts` and the scene components is **final** per the
-  design handoff. Do not rewrite it.
+  design handoff and the client's September 2026 notes. Do not rewrite it.
 - Typographic characters are deliberate: em dashes, curly quotes, and the
   non-breaking space in "Charles D. King". Preserve them.
 - ⚠ Note a conflict with the previous brand guidance, which said **no em or en

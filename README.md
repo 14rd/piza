@@ -40,8 +40,10 @@ Push to `master`. The `Deploy to GitHub Pages` Action builds and publishes
 | `components/CloudShader.tsx` | WebGL cloud background |
 | `components/ScrollStage.tsx` | scroll engine and scene crossfade |
 | `components/CharReveal.tsx` | character-level text reveal |
+| `components/FounderBio.tsx` | full biography overlay |
+| `components/InterviewEmbed.tsx` | click-to-play interview |
 | `components/scenes/` | one file per scene |
-| `lib/content.ts` | all copy and roster/press data |
-| `public/assets/` | logotype SVG, inflated logomark |
+| `lib/content.ts` | all copy, contact details and press data |
+| `public/assets/` | logotype SVG, inflated logomark, interview poster; founder portrait goes here |
 
 See `HANDOFF.md` for architecture, brand rules, and open items.

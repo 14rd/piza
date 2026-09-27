@@ -1,34 +1,47 @@
+import { existsSync } from 'node:fs';
+import path from 'node:path';
 import CharReveal from '../CharReveal';
+import FounderBio from '../FounderBio';
 import Scene from '../Scene';
-import { track } from '@/lib/content';
+import { founderBio, track } from '@/lib/content';
+
+/**
+ * Drop the client's photo at `public/assets/stephanie-piza.jpg` (4:5 works
+ * best) and rebuild. This is a server component, so the check runs once at
+ * build time; until the file exists the slot renders a placeholder.
+ */
+export const PORTRAIT_SRC = '/assets/stephanie-piza.jpg';
+const hasPortrait = existsSync(path.join(process.cwd(), 'public', PORTRAIT_SRC));
 
 export default function Founder() {
+  const [lead] = founderBio;
+
   return (
     <Scene label="Founder">
       <div className="pz-col pz-founder">
-        {/* real portrait of Stephanie Piza pending from client */}
         <div className="pz-portrait">
-          <div className="pz-portrait-fill" />
-          <span className="pz-portrait-label">
-            Portrait
-            <br />
-            <span style={{ opacity: 0.55 }}>awaiting</span>
-          </span>
+          {hasPortrait ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={PORTRAIT_SRC} alt="Stephanie Piza" className="pz-portrait-img" />
+          ) : (
+            <>
+              <div className="pz-portrait-fill" />
+              <span className="pz-portrait-label">
+                Portrait
+                <br />
+                <span style={{ opacity: 0.55 }}>awaiting</span>
+              </span>
+            </>
+          )}
         </div>
 
         <CharReveal as="h2" className="pz-h2 pz-founder-name">
           Stephanie Piza
         </CharReveal>
 
-        <p className="pz-bio">
-          Stephanie Piza founded PIZA after exiting M88, where she served as Head of
-          Emerging &amp; Interactive Talent. She began her career in the digital
-          talent and brand-partnerships divisions at CAA, then co-founded UNCMMN,
-          one of the first female-founded management firms centered on culturally
-          influential digital voices, alongside Charles D.{' '}King and Macro,
-          before it was acquired and folded into M88. Named to Variety’s “New
-          Leaders” list.
-        </p>
+        <p className="pz-bio">{lead}</p>
+
+        <FounderBio paragraphs={founderBio} portrait={hasPortrait ? PORTRAIT_SRC : null} />
 
         <div className="pz-track">
           {track.map((t) => (

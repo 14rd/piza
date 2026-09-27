@@ -1,29 +1,39 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { type FormEvent } from 'react';
+import { CONTACT } from '@/lib/content';
 
 /**
- * Client-side only: submitting flips the button label. There is no endpoint
- * yet — wire this to a form service or a mailto handler before launch.
+ * There is no form backend on a static site. Submitting composes an email to
+ * the founder in the visitor's mail app with the fields pre-filled, so nothing
+ * typed here is ever lost to a dead end.
  */
 export default function ContactForm() {
-  const [sent, setSent] = useState(false);
-
   const onSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setSent(true);
+    const data = new FormData(e.currentTarget);
+    const name = String(data.get('name') ?? '').trim();
+    const email = String(data.get('email') ?? '').trim();
+    const message = String(data.get('message') ?? '').trim();
+
+    const subject = `Enquiry from ${name || 'the PIZA website'}`;
+    const body = `${message}\n\n—\n${name}\n${email}`;
+    window.location.href =
+      `mailto:${CONTACT.founder}` +
+      `?subject=${encodeURIComponent(subject)}` +
+      `&body=${encodeURIComponent(body)}`;
   };
 
   return (
     <form className="pz-form" onSubmit={onSubmit}>
       <label className="pz-label">
         <span className="pz-label-text">Name</span>
-        <input type="text" name="name" required className="pz-input" />
+        <input type="text" name="name" required className="pz-input" autoComplete="name" />
       </label>
 
       <label className="pz-label">
         <span className="pz-label-text">Email</span>
-        <input type="email" name="email" required className="pz-input" />
+        <input type="email" name="email" required className="pz-input" autoComplete="email" />
       </label>
 
       <label className="pz-label">
@@ -32,8 +42,9 @@ export default function ContactForm() {
       </label>
 
       <button type="submit" className="pz-submit">
-        {sent ? 'Sent — we’ll be in touch' : 'Send enquiry'}
+        Send enquiry
       </button>
+      <span className="pz-form-note">Opens in your mail app</span>
     </form>
   );
 }

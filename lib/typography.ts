@@ -78,10 +78,11 @@ export function preventOrphanCharified(el: HTMLElement) {
 
 /** Text blocks that are not character-revealed. CharReveal handles its own. */
 export const ORPHAN_SELECTORS = [
-  '.pz-about-lede',
+  '.pz-about-lede p',
   '.pz-3-title',
   '.pz-3-body',
   '.pz-roster-lede',
+  '.pz-biodlg-text p',
   '.pz-bio',
   '.pz-note-title',
   '.pz-track-v',
