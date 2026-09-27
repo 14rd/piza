@@ -15,7 +15,7 @@ export default function Roster() {
         </CharReveal>
 
         <p className="pz-roster-lede">
-          PIZA represents a curated roster of digital-first entrepreneurs — cross-disciplinary
+          PIZA represents a curated roster of digital-first entrepreneurs: cross-disciplinary
           creators who’ve built real influence and are ready to own it. Details are shared
           privately with partners and collaborators.
         </p>

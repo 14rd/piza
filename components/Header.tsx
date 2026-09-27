@@ -5,22 +5,18 @@ const NAV = [
   { href: '#essence', label: 'About' },
   { href: '#roster', label: 'Roster' },
   { href: '#founder', label: 'Founder' },
-  { href: '#press', label: 'Press', hideSmall: true },
+  { href: '#press', label: 'Press' },
 ];
 
 export default function Header() {
   return (
     <header className="pz-header">
-      <a href="#top" aria-label="PIZA — Home" className="pz-logo-link">
+      <a href="#top" aria-label="PIZA, home" className="pz-logo-link">
         <Logo className="pz-logo" />
       </a>
       <nav className="pz-nav" aria-label="Primary">
         {NAV.map((item) => (
-          <a
-            key={item.href}
-            href={item.href}
-            className={item.hideSmall ? 'pz-hide-sm' : undefined}
-          >
+          <a key={item.href} href={item.href}>
             {item.label}
           </a>
         ))}

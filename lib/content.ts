@@ -1,7 +1,7 @@
 /**
  * All site copy. Final per the design handoff and the client's notes of
- * September 2026 — do not rewrite. Typographic characters (em dashes, curly
- * quotes, nbsp) are intentional.
+ * September 2026. Do not rewrite. Curly quotes are intentional. No em or en
+ * dashes anywhere in copy: James's rule, the client agrees.
  */
 
 export type ScopeItem = { title: string; body: string };
@@ -19,7 +19,7 @@ export const CONTACT = {
 export const ROSTER_REQUEST_HREF =
   `mailto:${CONTACT.founder}?subject=${encodeURIComponent('Roster request')}`;
 
-/** About — client copy, September 2026. */
+/** About: client copy, September 2026. */
 export const about = {
   headline: ['More than a management company.', 'More than an incubator.', 'More than a fund.'],
   body: [
@@ -31,7 +31,7 @@ export const about = {
 export const scope: ScopeItem[] = [
   {
     title: 'Equity & IP retention',
-    body: 'Clients own what they build — equity participation and IP that compounds.',
+    body: 'Clients own what they build: equity participation and IP that compounds.',
   },
   {
     title: 'Creator-led incubation',
@@ -50,7 +50,7 @@ export const values: string[] = [
   'Ownership-driven',
 ];
 
-/** Founder — client bio, September 2026. First paragraph leads on the page. */
+/** Founder: client bio, September 2026. First paragraph leads on the page. */
 export const founderBio: string[] = [
   'Named to Variety’s “New Leaders” list in 2021, Stephanie Piza has established herself as one of the most forward-thinking executives shaping the future of the creator economy. Proudly 100% Colombiana, her career has been defined by a singular mission: to champion underrepresented voices while building scalable, future-facing businesses around talent.',
   'Piza began her career at Creative Artists Agency (CAA), where she worked across digital talent and brand partnerships at a time when the creator economy was still in its early stages. Recognizing the cultural and commercial power of digital-native talent before it became mainstream, she quickly distinguished herself as one of the first Latina dealmakers to make a meaningful impact in the digital and new media landscape. Her ability to bridge culture, commerce, and storytelling positioned her as a trusted architect behind some of the most innovative partnerships in the space.',
@@ -63,7 +63,7 @@ export const founderBio: string[] = [
 export const track: TrackItem[] = [
   { k: 'CAA', v: 'Digital talent & brand partnerships' },
   { k: 'UNCMMN', v: 'Founded with Charles King & MACRO' },
-  { k: 'M88', v: 'Head of Emerging & Interactive Talent' },
+  { k: 'M88', v: 'Head of Interactive & Emerging Media' },
 ];
 
 /** The interview, embedded at the top of Press. */

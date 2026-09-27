@@ -489,6 +489,15 @@ input, textarea, button { font: inherit; color: inherit; }
 
 /* ---------- 6. press ---------- */
 
+/* names the scene, so it is never mistaken for part of Get in touch */
+.pz-section-label {
+  margin-bottom: clamp(14px,2.2vh,24px);
+  font-size: 10px;
+  letter-spacing: .28em;
+  text-transform: uppercase;
+  color: rgba(229,229,229,.5);
+}
+
 .pz-interview {
   display: flex; flex-direction: column; align-items: center;
   width: 100%;
@@ -658,7 +667,6 @@ input, textarea, button { font: inherit; color: inherit; }
 
 @media (max-width: 960px) {
   .pz-3 { grid-template-columns: 1fr; }
-  .pz-hide-sm { display: none; }
 }
 
 @media (max-width: 760px) {

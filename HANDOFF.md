@@ -116,10 +116,9 @@ No shadows. Micro-labels are 10px, letter-spacing .2–.24em, uppercase.
 
 ## Open items
 
-1. **Founder portrait.** Save the client's photo as
-   `public/assets/stephanie-piza.jpg` (4:5 crop works best, ~1200px wide) and
-   push. `components/scenes/Founder.tsx` checks for the file at build time and
-   swaps the placeholder for the image automatically.
+1. **Founder portrait** is in place at `public/assets/stephanie-piza.jpg`
+   (4:5 crop of the client's photo). `components/scenes/Founder.tsx` checks for
+   the file at build time; delete it and the placeholder returns.
 2. **Contact form has no backend.** Submitting composes an email to
    `stephanie@piza.global` in the visitor's mail app with the fields filled in.
    Replace with a form service if the client wants submissions stored.
@@ -137,11 +136,12 @@ interview added to Press; `stephanie@piza.global` added to Get in touch.
 
 - All copy in `lib/content.ts` and the scene components is **final** per the
   design handoff and the client's September 2026 notes. Do not rewrite it.
-- Typographic characters are deliberate: em dashes, curly quotes, and the
-  non-breaking space in "Charles D. King". Preserve them.
-- ⚠ Note a conflict with the previous brand guidance, which said **no em or en
-  dashes anywhere**. The current design copy uses em dashes throughout. The
-  design handoff is newer and was followed; worth confirming with the client.
+- **No em or en dashes anywhere in copy.** James's rule, and the client asked
+  for them removed (2026-09-27): they read as machine-written. Use a colon,
+  comma or full stop instead. Curly quotes stay.
+- The M88 line under the founder reads "Head of Interactive & Emerging Media"
+  at the client's request; the long bio still says "Head of Emerging and
+  Interactive Talent", which is their own text. Left as sent.
 
 ## Quality bar
 

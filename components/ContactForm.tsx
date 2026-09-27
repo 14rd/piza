@@ -17,7 +17,7 @@ export default function ContactForm() {
     const message = String(data.get('message') ?? '').trim();
 
     const subject = `Enquiry from ${name || 'the PIZA website'}`;
-    const body = `${message}\n\n—\n${name}\n${email}`;
+    const body = `${message}\n\n${name}\n${email}`;
     window.location.href =
       `mailto:${CONTACT.founder}` +
       `?subject=${encodeURIComponent(subject)}` +

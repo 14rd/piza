@@ -6,6 +6,7 @@ export default function Notes() {
   return (
     <Scene label="Press">
       <div className="pz-notes">
+        <span className="pz-section-label">Press</span>
         <div className="pz-interview">
           <InterviewEmbed id={interview.id} title={interview.title} poster={interview.poster} />
           <a
