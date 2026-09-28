@@ -11,7 +11,7 @@ export default function Roster() {
     <Scene label="Roster">
       <div className="pz-col pz-roster-wrap">
         <CharReveal as="h2" className="pz-h2 pz-roster-h2">
-          A roster shared on request.
+          Roster available by request.
         </CharReveal>
 
         <p className="pz-roster-lede">
