@@ -39,7 +39,7 @@ export const scope: ScopeItem[] = [
   },
   {
     title: 'Culture',
-    body: 'Ideas, collaborations and opportunities designed to compound influence over time.',
+    body: 'Ideas. Collaborations. Cultural capital. Long-term influence.',
   },
 ];
 
@@ -52,8 +52,7 @@ export const values: string[] = [
 
 /** Founder: client bio, September 2026. First paragraph leads on the page. */
 export const founderBio: string[] = [
-  'Stephanie Piza has spent more than 15 years betting on cultural talent before the rest of the industry catches up.',
-  'Named to Variety’s “New Leaders” list in 2021, Stephanie Piza has established herself as one of the most forward-thinking executives shaping the future of the creator economy. Proudly 100% Colombiana, her career has been defined by a singular mission: to champion underrepresented voices while building scalable, future-facing businesses around talent.',
+  'Stephanie Piza has spent more than 15 years betting on cultural talent before the rest of the industry catches up. Named to Variety’s “New Leaders” list in 2021, she has established herself as one of the most forward-thinking executives shaping the future of the creator economy. Proudly 100% Colombiana, her career has been defined by a singular mission: to champion underrepresented voices while building scalable, future-facing businesses around talent.',
   'Piza began her career at Creative Artists Agency (CAA), where she worked across digital talent and brand partnerships at a time when the creator economy was still in its early stages. Recognizing the cultural and commercial power of digital-native talent before it became mainstream, she quickly distinguished herself as one of the first Latina dealmakers to make a meaningful impact in the digital and new media landscape. Her ability to bridge culture, commerce, and storytelling positioned her as a trusted architect behind some of the most innovative partnerships in the space.',
   'In 2019, she founded UNCMMN in partnership with Charles King and MACRO, with the intention of redefining what representation could look like for a new generation of talent. UNCMMN was built to amplify diverse voices and operate with a holistic, 360-degree approach, integrating brand partnerships, content development, and applying long-term business strategies. Under her leadership, the company became a platform for cultural storytellers and creators whose influence extended far beyond social media. Following the success of UNCMMN, Piza went on to join M88, also co-founded by Charles King, a firm rooted in the mission of representing historically excluded talent and building generational equity. As Head of Emerging and Interactive Talent, she led the division with a focus on innovation at the intersection of technology, media, and culture, continuing to push the boundaries of how talent is positioned, monetized, and scaled.',
   'Now, Piza enters her most ambitious chapter yet as the founder of PIZA, a next-generation representation company built on the belief that talent should not only participate in culture, but own it. Designed as representation 2.0, PIZA reimagines the traditional management model by prioritizing ownership, equity, and long-term value creation over transactional deal-making. The company is focused on building enduring businesses, intellectual property, and legacy platforms that extend far beyond a single moment, campaign, or platform.',
