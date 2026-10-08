@@ -5,9 +5,10 @@ const DESCRIPTION =
   'PIZA is a next-gen talent venture studio and creative IP accelerator helping digital creators, entertainers, and storytellers build, co-own, and scale media empires. Founded in Los Angeles by Stephanie Piza.';
 
 export const metadata: Metadata = {
-  title: 'PIZA · Representation 2.0',
+  // Tab label only. Share cards keep the longer line below.
+  title: 'PIZA',
   description: DESCRIPTION,
-  metadataBase: new URL('https://piza.studiosubtract.com'),
+  metadataBase: new URL('https://piza.global'),
   openGraph: {
     title: 'PIZA · Representation 2.0',
     description: DESCRIPTION,
