@@ -68,15 +68,21 @@ export const track: TrackItem[] = [
 
 /** The interview, embedded at the top of Press. */
 export const interview = {
-  id: 'OxynGjQiUYQ',
-  href: 'https://www.youtube.com/watch?v=OxynGjQiUYQ',
-  source: 'SpringHill · Call My People',
+  id: 'O70I2iO7l3Y',
+  href: 'https://www.youtube.com/watch?v=O70I2iO7l3Y',
+  source: 'Awf The Record',
   title:
-    'Stephanie Piza talks talent management and the importance of creating your own path',
-  poster: '/assets/interview-poster.jpg',
+    'The New Rules of the Creator Economy: How to Build a Personal Brand That Pays',
+  poster: '/assets/interview-poster-awf.jpg',
 };
 
 export const press: PressItem[] = [
+  {
+    source: 'SpringHill · Call My People',
+    title:
+      'Stephanie Piza talks talent management and the importance of creating your own path',
+    href: 'https://www.youtube.com/watch?v=OxynGjQiUYQ',
+  },
   {
     source: 'Deadline / Feb 2026',
     title:
